@@ -361,7 +361,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 (() => {
 'use strict';
 /* ===== utils ===== */
-const BUILD = '1 ott 2026, 12:24';
+const BUILD = '1 ott 2026, 12:25';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -644,7 +644,7 @@ function renderOggi() {
     </div>
     <div class="card cash">
       <div class="card-head" style="margin-bottom:2px"><div class="k">Da parte per i lavori</div><button class="btn sm" data-act="allinea">Aggiorna</button></div>
-      <div class="v ${p.start < 0 ? 'neg' : ''}">${fmt(p.start)}</div><div class="d">${m.monthly ? `+${fmt(m.monthly)} ogni mese` : ''}</div>
+      <div class="v ${p.start < 0 ? 'neg' : ''}">${fmt(p.start)}</div><div class="d">${m.monthly ? `+${fmt(m.monthly)} ogni mese fino a ${labelM(worksLast(st))}` : ''}</div>
       <div class="strip" id="strip"></div>
       <div class="strip-foot"><span>a fine mese</span><button class="link" data-act="strip" data-v="">Mesi ›</button></div>
     </div>

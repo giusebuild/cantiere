@@ -17,11 +17,11 @@ La pagina è vuota finché non ci metti i tuoi dati. Per vederla con numeri di p
 
 **Mostra.** Nella scheda di un contratto c'è un tasto che nasconde tutto il resto: rimane solo quella scheda. La fai vedere all'impresa o all'architetto, senza mostrare i tuoi soldi o gli altri contratti. Trasparenza, con misura.
 
-**Imposta.** Tre numeri: quanto hai da parte oggi, quanto riesci a mettere ogni mese, sotto quanto non vuoi mai scendere. Più il prestito, se serve: quanto ti manca, entro quando, e la rata.
+**Imposta.** Tre numeri: quanto hai da parte oggi, quanto riesci a mettere ogni mese finché durano i lavori, sotto quanto non vuoi mai scendere. Più il prestito, se serve: quanto ti manca, entro quando, e la rata.
 
 ## Come ragiona
 
-- Il punto fermo è **quanto hai da parte oggi**. Da lì in avanti aggiunge quello che metti ogni mese e toglie i pagamenti previsti. Il passato non lo inventa: quello che hai pagato prima è già dentro quel numero.
+- Il punto fermo è **quanto hai da parte oggi**. Da lì in avanti aggiunge quello che metti ogni mese, fino al mese dell'ultimo pagamento, e toglie i pagamenti previsti. Il passato non lo inventa: quello che hai pagato prima è già dentro quel numero.
 - Un pagamento segnato è reale, con la sua data e il suo importo. Il previsto resta accanto, così vedi se stai sforando.
 - Un pagamento previsto per un mese passato e non segnato è **in ritardo**: lo tiene davanti agli occhi finché non lo segni o lo sposti.
 - Se l'impresa slitta, nel contratto c'è *Sposta i non pagati*: tutti i pagamenti ancora da fare, avanti o indietro di un mese.
