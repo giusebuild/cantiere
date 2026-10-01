@@ -483,10 +483,11 @@ function rata(P, rate, years) { const n = Math.max(1, Math.round(years * 12)); c
 function availableNow(st) {
   const m = st.money; const cur = curMonth(); const base = m.availableAt.slice(0, 7);
   let v = m.available + Math.max(0, monthDiff(base, cur)) * m.monthly;
-  for (const c of st.contracts) for (const p of c.payments) if (p.actual && p.actual.at > m.availableAt) v -= p.actual.amount;
-  for (const e of st.extras) if (e.at > m.availableAt) v += e.amount;
+  for (const c of st.contracts) for (const p of c.payments) if (p.actual && afterAlign(p.actual, m.availableAt)) v -= p.actual.amount;
+  for (const e of st.extras) if (afterAlign(e, m.availableAt)) v += e.amount;
   return r2(v);
 }
+function afterAlign(x, at) { const d = at.slice(0, 10); return x.date > d || (x.date === d && x.at > at); }
 function pendingPayments(st) {
   const cur = curMonth(); const out = [];
   for (const c of st.contracts) for (const p of c.payments) if (p.planned && !p.actual) { const month = planMonth(st, p); out.push({ key: 'pay:' + p.id, c, p, month, bucket: month < cur ? cur : month, overdue: month < cur, amount: p.planned.amount }); }
@@ -510,18 +511,15 @@ function project(st, loanOv) {
   return { months, rows, minRow, endRow: rows[rows.length - 1], cur, end, beyond, pend, start: availableNow(st) };
 }
 function pastRows(st, p) {
-  const cur = p.cur; const m = st.money; let first = st.site.startMonth;
+  const cur = p.cur; let first = st.site.startMonth;
   for (const c of st.contracts) for (const pay of c.payments) { if (pay.actual && pay.actual.date.slice(0, 7) < first) first = pay.actual.date.slice(0, 7); if (pay.planned && planMonth(st, pay) < first) first = planMonth(st, pay); }
   for (const e of st.extras) if (e.date.slice(0, 7) < first) first = e.date.slice(0, 7);
   const floor = addMonths(cur, -12); if (first < floor) first = floor;
   if (first >= cur) return [];
   const months = monthRange(first, addMonths(cur, -1)); const sums = {}; for (const mm of months) sums[mm] = { inc: 0, out: 0 };
-  let curOut = 0, curIn = 0;
-  for (const c of st.contracts) for (const pay of c.payments) if (pay.actual) { const mm = pay.actual.date.slice(0, 7); if (mm === cur) curOut += pay.actual.amount; else if (sums[mm]) sums[mm].out += pay.actual.amount; }
-  for (const e of st.extras) { const mm = e.date.slice(0, 7); if (mm === cur) curIn += e.amount; else if (sums[mm]) sums[mm].inc += e.amount; }
-  let bal = r2(p.start + curOut - curIn); const out = [];
-  for (let i = months.length - 1; i >= 0; i--) { const mm = months[i]; const s = sums[mm]; const inc = r2(s.inc + m.monthly); out.unshift({ month: mm, inc, out: r2(s.out), bal, past: true }); bal = r2(bal - inc + s.out); }
-  return out;
+  for (const c of st.contracts) for (const pay of c.payments) if (pay.actual && sums[pay.actual.date.slice(0, 7)]) sums[pay.actual.date.slice(0, 7)].out += pay.actual.amount;
+  for (const e of st.extras) if (sums[e.date.slice(0, 7)]) sums[e.date.slice(0, 7)].inc += e.amount;
+  return months.map(mm => ({ month: mm, inc: r2(sums[mm].inc), out: r2(sums[mm].out), past: true }));
 }
 function curActuals(st, cur) { let out = 0, inc = 0; for (const c of st.contracts) for (const pay of c.payments) if (pay.actual && pay.actual.date.slice(0, 7) === cur) out += pay.actual.amount; for (const e of st.extras) if (e.date.slice(0, 7) === cur) inc += e.amount; return { out: r2(out), inc: r2(inc) }; }
 function suggestLoan(st) {
@@ -649,7 +647,7 @@ function renderCantiere() {
   if (contractView) { const c = state.contracts.find(x => x.id === contractView); if (c) { el.innerHTML = contractPageHTML(c); return; } contractView = null; }
   el.innerHTML = `<div class="seg not-present"><button class="${cantView === 'mesi' ? 'on' : ''}" data-act="cantView" data-v="mesi">Mesi</button><button class="${cantView === 'contratti' ? 'on' : ''}" data-act="cantView" data-v="contratti">Contratti</button></div>
     ${cantView === 'mesi' ? mesiHTML() : contrattiHTML()}`;
-  if (cantView === 'mesi') drawChart(navRows);
+  if (cantView === 'mesi') drawChart(navRows.filter(r => !r.past));
 }
 let navMonths = [], navRows = [];
 function mesiHTML() {
@@ -657,10 +655,10 @@ function mesiHTML() {
   if (!expandedMonth || !navMonths.includes(expandedMonth)) expandedMonth = p.cur;
   const cushion = st.money.cushion; const wl = worksLast(st); const i = navMonths.indexOf(expandedMonth); const r = navRows[i];
   const tag = m => m === p.cur ? 'adesso' : m === st.site.startMonth ? 'inizio lavori' : m === wl ? 'fine lavori' : '';
-  const ca = curActuals(st, p.cur);
   const isCur = r.month === p.cur;
-  const startBal = isCur ? r2(p.start + ca.out - ca.inc) : i === 0 ? r2(r.bal - r.inc + r.out) : navRows[i - 1].bal;
-  const inc = isCur ? r2(r.inc + ca.inc) : r.inc, outv = isCur ? r2(r.out + ca.out) : r.out;
+  const flow = r.past ? ((r.out || r.inc) ? `<div class="mflow"><span>Pagato <b>−${fmt(r.out)}</b></span>${r.inc ? `<span>incassato <b class="in">+${fmt(r.inc)}</b></span>` : ''}</div>` : '')
+    : isCur ? `<div class="mflow"><span>Da parte oggi <b>${fmt(p.start)}</b></span><span>da pagare <b>−${fmt(r.out)}</b></span>${r.inc ? `<span>in arrivo <b class="in">+${fmt(r.inc)}</b></span>` : ''}<span>fine mese <b class="${balCls(r.bal, cushion)}">${fmt(r.bal)}</b></span></div>`
+    : `<div class="mflow"><span>Parti con <b>${fmt(navRows[i - 1].bal)}</b></span><span>entra <b class="in">+${fmt(r.inc)}</b></span><span>esce <b>−${fmt(r.out)}</b></span><span>fine mese <b class="${balCls(r.bal, cushion)}">${fmt(r.bal)}</b></span></div>`;
   const planned = r.past ? p.pend.filter(x => x.month === r.month).map(x => ({ kind: 'out', label: x.c.name, sub: x.p.note, amount: x.amount, p: x.p, overdue: true })) : r.rows.filter(x => !x.key.startsWith('monthly:'));
   const rowsHTML = planned.map(x => `<div class="row due ghost">
       <div class="lbl"><div class="t">${esc(x.label)}</div><div class="s">${x.sub ? esc(x.sub) : ''}${x.overdue ? ` <span class="chip neg">era ${labelM(planMonth(st, x.p), true)}</span>` : ''}</div></div>
@@ -670,8 +668,7 @@ function mesiHTML() {
   return `<div class="card"><div class="card-head"><h2>Da parte a fine mese</h2><span class="chip">lavori ${labelM(worksFirst(st))} – ${labelM(wl)}</span></div><div class="chart-wrap" id="chart"></div></div>
     <div class="card">
       <div class="mnav"><button class="icon-btn" data-act="monthNav" data-v="-1" ${i === 0 ? 'disabled' : ''}>${I.left}</button><div class="mtitle"><b>${labelM(r.month, true)}</b>${tag(r.month) ? `<span class="chip">${tag(r.month)}</span>` : ''}</div><button class="icon-btn" data-act="monthNav" data-v="1" ${i === navMonths.length - 1 ? 'disabled' : ''}>${I.right}</button></div>
-      <div class="mflow"><span>Parti con <b>${fmt(startBal)}</b></span><span>entra <b class="in">+${fmt(inc)}</b></span><span>esce <b>−${fmt(outv)}</b></span><span>fine mese <b class="${balCls(r.bal, cushion)}">${fmt(r.bal)}</b></span></div>
-      ${r.past ? '<div class="hint" style="margin-bottom:6px">Ricostruito da quello che hai segnato.</div>' : ''}
+      ${flow}
       ${planned.length ? `<h3 style="margin:8px 0 2px">Da fare</h3>${rowsHTML}` : ''}
       ${done ? `<h3 style="margin:12px 0 2px">Fatto</h3>${done}` : ''}
       ${!planned.length && !done ? '<div class="empty">Niente in questo mese.</div>' : ''}
@@ -749,7 +746,7 @@ function drawChart(rows) {
     <line x1="${padL}" x2="${W - padR}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line)" stroke-width="1"/>
     ${cushion > 0 ? `<line x1="${padL}" x2="${W - padR}" y1="${y(cushion)}" y2="${y(cushion)}" stroke="var(--warn)" stroke-width="1" stroke-dasharray="3 4" opacity=".8"/><text x="${W - padR}" y="${y(cushion) - 4}" text-anchor="end" style="fill:var(--warn)">minimo ${tickTxt(cushion)}</text>` : ''}
     ${rows.map((r, i) => bar(i, r)).join('')}
-    ${rows.map((r, i) => `<text x="${x(i) + bw / 2}" y="${H - 8}" text-anchor="middle" class="${r.month === expandedMonth || r.month === cur ? 'sel' : ''}">${i % labelEvery === 0 || r.month === expandedMonth || r.month === cur ? (r.month === cur ? 'ora' : r.month.endsWith('-01') ? labelM(r.month) : MONTHS[Number(r.month.slice(5)) - 1]) : ''}</text>`).join('')}
+    ${rows.map((r, i) => `<text x="${x(i) + bw / 2}" y="${H - 8}" text-anchor="middle" class="${r.month === expandedMonth || r.month === cur ? 'sel' : ''}">${i % labelEvery === 0 || r.month === expandedMonth || r.month === cur ? (r.month === cur ? 'ora' : MONTHS[Number(r.month.slice(5)) - 1]) : ''}</text>`).join('')}
     ${rows.map((r, i) => `<rect class="hit" x="${padL + slot * i}" y="0" width="${slot}" height="${H}" fill="transparent" data-act="month" data-v="${r.month}"><title>${labelM(r.month, true)}: ${fmt(r.bal)}</title></rect>`).join('')}
   </svg>`;
 }
