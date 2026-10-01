@@ -102,10 +102,12 @@ h3{font-size:14px;color:var(--ink-2);font-weight:700}
 .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 .card-head h2 .sub{font-weight:600;color:var(--muted);font-size:13px;margin-left:6px}
 .k{font-size:12px;font-weight:700;color:var(--muted)}
-@media (min-width:1000px){
-  .oggi{grid-template-columns:1fr 1fr;align-items:start}
-  .oggi .verdict{grid-column:1/-1}
-  .cantiere,.imposta{max-width:760px;width:100%;margin:0 auto}
+@media (min-width:900px){
+  .view{max-width:720px;width:100%;margin:0 auto;gap:16px}
+  .main{padding-top:22px}
+  .card{padding:22px 24px}
+  .verdict .big{font-size:32px}
+  .cash .v{font-size:40px}
 }
 
 /* verdict */
@@ -205,6 +207,8 @@ h3{font-size:14px;color:var(--ink-2);font-weight:700}
 .field .hint,.hint{font-size:12px;color:var(--muted);line-height:1.4}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:600px){.grid3.resp,.grid4{grid-template-columns:1fr 1fr}}
 .switch-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0 12px}
 .switch-row label{font-size:14px;font-weight:700;color:var(--ink)}
 .switch{appearance:none;-webkit-appearance:none;width:46px;height:28px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;flex:0 0 auto;margin:0}
@@ -357,7 +361,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 (() => {
 'use strict';
 /* ===== utils ===== */
-const BUILD = '1 ott 2026, 12:17';
+const BUILD = '1 ott 2026, 12:21';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -772,7 +776,7 @@ function renderImposta() {
   const sug = suggestLoan(st); const r = rata(L.amount, L.rate, L.years); const n = Math.max(1, Math.round(L.years * 12));
   $('#view-imposta').innerHTML = `
     <div class="card"><div class="card-head"><h2>Il cantiere</h2></div>
-      <div class="grid2">
+      <div class="grid3 resp">
         <div class="field"><label>Da parte oggi</label><input type="number" inputmode="decimal" step="any" data-money="available" value="${m.available}"></div>
         <div class="field"><label>Metto da parte al mese</label><input type="number" inputmode="decimal" step="any" data-money="monthly" value="${m.monthly}"></div>
         <div class="field"><label>Non scendere sotto</label><input type="number" inputmode="decimal" step="any" data-money="cushion" value="${m.cushion}"></div>
@@ -780,7 +784,7 @@ function renderImposta() {
     </div>
     <div class="card" id="loanCard"><div class="card-head"><h2>Prestito</h2><label class="switch-row" style="padding:0;gap:8px"><span class="muted" style="font-size:12px;font-weight:700">nel piano</span><input type="checkbox" class="switch" data-loan="active" ${L.active ? 'checked' : ''}></label></div>
       <div id="needBox">${needHTML(sug)}</div>
-      <div class="grid2" style="margin-top:12px">
+      <div class="grid4" style="margin-top:12px">
         <div class="field"><label>Importo</label><input type="number" inputmode="decimal" step="any" data-loan="amount" value="${L.amount || ''}" placeholder="0"></div>
         <div class="field"><label>Arriva a</label><select data-loan="month">${monthOptions(L.month, cur, addMonths(m.endMonth, 6), { blank: 'scegli il mese' })}</select></div>
         <div class="field"><label>Tasso %</label><input type="number" inputmode="decimal" step="any" data-loan="rate" value="${L.rate}"></div>
