@@ -46,7 +46,7 @@ Due strade.
 2. Genera un token: Settings → Developer settings → Personal access tokens → *Fine-grained tokens*. Repository access: *Only select repositories* → quel repo. Permissions → *Contents: Read and write*. Scadenza fino a un anno.
 3. Apri l'app, scrivi il repo come `nome/repo`, incolla il token, *Entra*. Il browser chiede di salvarlo come una password: dì di sì. Sul telefono, *Aggiungi a Home*.
 
-Quando il token scade l'app segna *Offline* e lo dice: ne generi un altro, Imposta → Esci, rientri. Nel frattempo tutto resta sul dispositivo.
+Quando il token scade l'app segna *Offline* e lo dice: ne generi un altro, tocchi *Esci* in alto a destra, rientri. Nel frattempo tutto resta sul dispositivo.
 
 **Oppure chiedi a me.** Se GitHub non fa per te ma l'app sì, [scrivimi aprendo una issue](https://github.com/giusebuild/cantiere/issues/new): ti aiuto a metterla in piedi, o ti dico come la userei al posto tuo.
 

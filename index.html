@@ -164,7 +164,7 @@ h3{font-size:14px;color:var(--ink-2);font-weight:700}
 .bar i{display:block;height:100%;border-radius:999px}
 
 /* months list */
-.mrow2{display:grid;grid-template-columns:84px 1fr 90px;align-items:center;gap:10px;padding:11px 0;border:0;background:none;width:100%;text-align:left;border-bottom:1px solid var(--line-2);font:inherit;color:inherit;cursor:pointer}
+.mrow2{display:grid;grid-template-columns:84px 1fr 90px 14px;align-items:center;gap:8px;padding:11px 0;border:0;background:none;width:100%;text-align:left;border-bottom:1px solid var(--line-2);font:inherit;color:inherit;cursor:pointer}
 .mrow2 .ml{font-weight:800;font-size:14px;line-height:1.15}
 .mrow2 .ml small{color:var(--muted);font-weight:600;margin-left:3px}
 .mrow2 .ml em{display:block;font-style:normal;font-size:10px;color:var(--accent-ink);font-weight:800;letter-spacing:.05em;text-transform:uppercase}
@@ -172,8 +172,11 @@ h3{font-size:14px;color:var(--ink-2);font-weight:700}
 .mrow2 .mb i{display:block;height:100%;border-radius:999px;min-width:3px}
 .mrow2 .ma{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
 .mrow2 .ma.neg{color:var(--neg)}.mrow2 .ma.warn{color:var(--warn)}.mrow2 .ma.past{color:var(--muted);font-weight:700}
-.month.open .mrow2{background:var(--surface-2);border-radius:12px;padding:11px 10px;margin:0 -10px;border-bottom:0}
-.month.open .mbody{padding:6px 0 12px;border-bottom:1px solid var(--line-2)}
+.mrow2 .mc{width:14px;height:14px;color:var(--muted);transition:transform .15s}
+.month.open .mrow2 .mc{transform:rotate(90deg);color:var(--ink)}
+.month.open .mrow2{position:sticky;top:calc(59px + env(safe-area-inset-top));z-index:3;background:var(--surface-2);border-radius:12px;padding:11px 10px;margin:0 -10px;border-bottom:0;box-shadow:0 6px 14px rgba(0,0,0,.08)}
+.month.open .mbody{padding:6px 0 12px 12px;margin:4px 0 6px 2px;border-left:3px solid var(--line);border-bottom:1px solid var(--line-2)}
+.month.open .mbody.ok{border-left-color:var(--accent)}.month.open .mbody.warn{border-left-color:var(--warn)}.month.open .mbody.neg{border-left-color:var(--neg)}
 .month:last-child .mrow2,.month:last-child .mbody{border-bottom:0}
 
 /* months */
@@ -301,6 +304,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 .sheet-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .sheet-actions .primary{flex:1}
 .icon-btn{width:38px;height:38px;border:0;border-radius:12px;background:transparent;display:grid;place-items:center;color:var(--ink-2)}
+.top #logoutBtn{margin-left:-4px}
 .icon-btn svg{width:20px;height:20px}
 @media (min-width:900px){
   dialog.sheet{position:fixed;inset:0;margin:auto;width:520px;max-width:520px;border-radius:22px;max-height:88vh}
@@ -341,6 +345,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
       <button class="tab-plus" data-act="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Segna</button>
     </nav>
     <span class="sync local" id="sync"><i></i><b>Solo qui</b></span>
+    <button class="icon-btn hidden" id="logoutBtn" data-act="logout" aria-label="Esci" title="Esci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></button>
   </header>
   <main class="main">
     <section id="view-oggi" class="view oggi"></section>
@@ -361,7 +366,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 (() => {
 'use strict';
 /* ===== utils ===== */
-const BUILD = '1 ott 2026, 12:25';
+const BUILD = '1 ott 2026, 12:28';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -686,7 +691,7 @@ function renderCantiere() {
 let navMonths = [], navRows = [];
 function mesiHTML() {
   const st = state; const p = project(st); const past = pastRows(st, p); navRows = [...past, ...p.rows]; navMonths = navRows.map(x => x.month);
-  if (!expandedMonth || !navMonths.includes(expandedMonth)) expandedMonth = p.cur;
+  if (expandedMonth !== 'none' && (!expandedMonth || !navMonths.includes(expandedMonth))) expandedMonth = p.cur;
   const cushion = st.money.cushion; const [wf, wl] = worksSpan(st);
   const maxAbs = Math.max(1, ...p.rows.map(r => Math.abs(r.bal)), ...past.map(r => r.out));
   const list = navRows.map((r, i) => {
@@ -695,10 +700,10 @@ function mesiHTML() {
     const val = r.past ? r.out : r.bal; const w = Math.max(r.past && !r.out ? 0 : 2, Math.round(Math.abs(val) / maxAbs * 100));
     const color = r.past ? 'var(--muted)' : balColor(r.bal, cushion); const cls = r.past ? 'past' : balCls(r.bal, cushion);
     const amt = r.past ? (r.out ? `−${fmt(r.out)}` : '') : fmt(r.bal);
-    const row = `<button class="mrow2" data-act="month" data-v="${r.month}"><span class="ml">${MONTHS[mo - 1]}<small>${String(yy).slice(2)}</small>${tag ? `<em>${tag}</em>` : ''}</span><span class="mb"><i style="width:${w}%;background:${color};opacity:${r.past ? .5 : 1}"></i></span><span class="ma ${cls}">${amt}</span></button>`;
+    const row = `<button class="mrow2" data-act="month" data-v="${r.month}"><span class="ml">${MONTHS[mo - 1]}<small>${String(yy).slice(2)}</small>${tag ? `<em>${tag}</em>` : ''}</span><span class="mb"><i style="width:${w}%;background:${color};opacity:${r.past ? .5 : 1}"></i></span><span class="ma ${cls}">${r.past && r.out ? '<small style="font-weight:600">pagato</small> ' : ''}${amt}</span>${I.chev.replace('class="chev"', 'class="mc"')}</button>`;
     return `<div class="month ${open ? 'open' : ''}">${row}${open ? monthBodyHTML(st, p, r, i) : ''}</div>`;
   }).join('');
-  return `<div class="card"><div class="card-head"><h2>Da parte a fine mese</h2><span class="chip">lavori ${labelM(wf)} – ${labelM(wl)}</span></div>${list}</div>`;
+  return `<div class="card"><div class="card-head" style="margin-bottom:2px"><h2>Mese per mese</h2><span class="chip">lavori ${labelM(wf)} – ${labelM(wl)}</span></div><div class="hint" style="margin-bottom:6px">Quanto avrai da parte a fine di ogni mese. Tocca un mese per aprirlo.</div>${list}</div>`;
 }
 function monthBodyHTML(st, p, r, i) {
   const cushion = st.money.cushion; const isCur = r.month === p.cur;
@@ -711,7 +716,7 @@ function monthBodyHTML(st, p, r, i) {
       <div class="due-r"><span class="amt ${x.kind}">${x.kind === 'in' ? '+' : '−'}${fmt(x.amount)}</span>${x.p ? `<button class="btn sm primary" data-act="fatto" data-v="${x.p.id}">Fatto</button><button class="icon-btn" data-act="segna" data-v="${x.p.id}" aria-label="Cambia importo o data">${I.pencil}</button>` : ''}</div>
     </div>`).join('');
   const done = doneInMonthHTML(st, r.month);
-  return `<div class="mbody">${flow}
+  return `<div class="mbody ${r.past ? '' : balCls(r.bal, cushion)}">${flow}
       ${planned.length ? `<h3 style="margin:8px 0 2px">Da fare</h3>${rowsHTML}` : ''}
       ${done ? `<h3 style="margin:12px 0 2px">Fatto</h3>${done}` : ''}
       ${!planned.length && !done ? '<div class="empty">Niente in questo mese.</div>' : ''}</div>`;
@@ -793,9 +798,8 @@ function renderImposta() {
       <div id="loanBox">${loanResultHTML(L, r, n)}</div>
     </div>
     <div class="card"><div class="card-head"><h2>Dati</h2><span class="muted" style="font-size:12px;font-weight:700">${gh ? esc(gh.repo) : 'solo qui'}</span></div>
-      <div class="actions"><button class="btn" data-act="export">Scarica backup</button><button class="btn" data-act="import">Carica backup</button><button class="btn ghost" data-act="sample">${imposta.confirmSample ? 'Confermi? Sostituisco tutto' : 'Esempio'}</button>${gh ? `<button class="btn ghost" data-act="logout">${imposta.confirmLogout ? 'Confermi? Esco' : 'Esci'}</button>` : ''}</div>
+      <div class="actions"><button class="btn" data-act="export">Scarica backup</button><button class="btn" data-act="import">Carica backup</button><button class="btn ghost" data-act="sample">${imposta.confirmSample ? 'Confermi? Sostituisco tutto' : 'Esempio'}</button></div>
       <div class="hint" style="margin-top:10px;display:flex;justify-content:space-between;align-items:center"><span>versione ${BUILD}</span><button class="link" data-act="reload">Ricarica</button></div>
-      ${imposta.confirmLogout ? '<div class="hint" style="margin-top:8px">I dati restano nel repo. Da questo dispositivo spariscono.</div>' : ''}
       ${gh ? '' : `<details style="margin-top:12px"><summary class="hint" style="cursor:pointer;font-weight:700">Collega GitHub</summary><div style="margin-top:10px">${linkFormHTML('Collega')}</div></details>`}
     </div>`;
 }
@@ -831,7 +835,7 @@ function showTab(t, focus) {
 function setPresent(on) { document.body.classList.toggle('present', !!on); }
 /* ===== persistence ===== */
 let saveTimer = null, pendingSave = false;
-function setStatus(k) { const el = $('#sync'); el.className = 'sync ' + k; el.querySelector('b').textContent = { saved: 'Salvato', saving: 'Salvo…', offline: 'Offline', local: 'Solo qui' }[k] || ''; }
+function setStatus(k) { const el = $('#sync'); el.className = 'sync ' + k; el.querySelector('b').textContent = { saved: 'Salvato', saving: 'Salvo…', offline: 'Offline', local: 'Solo qui' }[k] || ''; $('#logoutBtn').classList.toggle('hidden', !gh); }
 function loadLocal() {
   try { const j = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); if (j) return normalize(j); } catch { }
   try { const o = JSON.parse(localStorage.getItem(LS_OLD) || 'null'); if (o) { const st = anyToState(o); try { localStorage.setItem(LS_KEY, JSON.stringify(st)); } catch { } return st; } } catch { }
@@ -1009,6 +1013,10 @@ function renderSheet() {
       ${d.payments.some(p => !p.planned) ? `<div class="hint" style="margin-bottom:10px">Extra pagati: ${fmt(s.extra)}</div>` : ''}
       <div class="field"><label>Note</label><input data-f="notes" value="${esc(d.notes)}"></div>
       <div class="sheet-actions"><button class="btn primary" data-act="saveContract">Salva</button>${sheet.isNew ? '' : `<button class="btn danger" data-act="delContract">${sheet.confirmDel ? 'Confermi? Elimino' : 'Elimina'}</button>`}</div>`;
+  } else if (t === 'logout') {
+    b.innerHTML = `${head('Esci')}
+      <div class="hint" style="margin-bottom:14px">I dati restano nel repo. Da questo dispositivo spariscono.</div>
+      <div class="sheet-actions"><button class="btn primary" data-act="logoutGo">Esci</button><button class="btn" data-act="closeSheet">Annulla</button></div>`;
   } else if (t === 'confirmImport') {
     const st = sheet.st;
     b.innerHTML = `${head('Carica backup')}
@@ -1030,7 +1038,7 @@ function onAct(act, el) {
   switch (act) {
     case 'tab': showTab(v, el.dataset.focus); break;
     case 'cantView': cantView = v; renderCantiere(); break;
-    case 'month': expandedMonth = v; renderCantiere(); setTimeout(() => $('#view-cantiere .month.open')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 30); break;
+    case 'month': expandedMonth = expandedMonth === v ? 'none' : v; renderCantiere(); if (expandedMonth !== 'none') setTimeout(() => $('#view-cantiere .month.open')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 30); break;
     case 'openContract': contractView = v; renderCantiere(); window.scrollTo({ top: 0 }); break;
     case 'backContracts': contractView = null; cantView = 'contratti'; renderCantiere(); break;
     case 'present': setPresent(v === 'on'); renderCantiere(); window.scrollTo({ top: 0 }); break;
@@ -1080,7 +1088,8 @@ function onAct(act, el) {
     case 'import': $('#importFile').click(); break;
     case 'doImport': state = sheet.st; persist(); closeSheet(); contractView = null; expandedMonth = null; render(); toast('Caricato'); break;
     case 'sample': if (!imposta.confirmSample) { imposta.confirmSample = true; render(); return; } imposta.confirmSample = false; state = sampleState(); persist(); contractView = null; expandedMonth = null; showTab('oggi'); toast('Esempio caricato'); break;
-    case 'logout': if (!imposta.confirmLogout) { imposta.confirmLogout = true; render(); return; } logout(); break;
+    case 'logout': openSheet('logout'); break;
+    case 'logoutGo': closeSheet(); logout(); break;
     case 'localOnly': try { localStorage.setItem(MODE_KEY, 'local'); } catch { } $('#gate').classList.add('hidden'); setStatus('local'); render(); break;
     case 'useLoan': useLoan(); break;
     case 'reload': location.reload(); break;
