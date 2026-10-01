@@ -777,11 +777,12 @@ function renderImposta() {
       <div id="loanBox">${loanResultHTML(L, r, n)}</div>
     </div>
     <div class="card"><div class="card-head"><h2>Dati</h2><span class="muted" style="font-size:12px;font-weight:700">${gh ? esc(gh.repo) : 'solo qui'}</span></div>
-      <div class="actions"><button class="btn" data-act="export">Scarica backup</button><button class="btn" data-act="import">Carica backup</button><button class="btn ghost" data-act="sample">${imposta.confirmSample ? 'Confermi? Sostituisco tutto' : 'Esempio'}</button>${gh ? `<button class="btn ghost" data-act="ghUnlink">Scollega</button>` : ''}</div>
+      <div class="actions"><button class="btn" data-act="export">Scarica backup</button><button class="btn" data-act="import">Carica backup</button><button class="btn ghost" data-act="sample">${imposta.confirmSample ? 'Confermi? Sostituisco tutto' : 'Esempio'}</button>${gh ? `<button class="btn ghost" data-act="logout">${imposta.confirmLogout ? 'Confermi? Esco' : 'Esci'}</button>` : ''}</div>
+      ${imposta.confirmLogout ? '<div class="hint" style="margin-top:8px">I dati restano nel repo. Da questo dispositivo spariscono.</div>' : ''}
       ${gh ? '' : `<details style="margin-top:12px"><summary class="hint" style="cursor:pointer;font-weight:700">Collega GitHub</summary><div style="margin-top:10px">${linkFormHTML('Collega')}</div></details>`}
     </div>`;
 }
-const imposta = { confirmSample: false };
+const imposta = { confirmSample: false, confirmLogout: false };
 function needHTML(sug) {
   const m = state.money;
   if (!isFinite(sug.amount)) return `<div class="note neg">Non basta un prestito entro la fine del piano.</div>`;
@@ -885,6 +886,13 @@ async function ghLinkAction(form) {
     if (!j.private) setTimeout(() => toast('Occhio: il repo è pubblico'), 2800);
     setStatus('saved'); closeSheet(); $('#gate').classList.add('hidden'); render();
   } catch (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = label; }
+}
+async function logout() {
+  if (pendingSave) { clearTimeout(saveTimer); await pushCloud(); }
+  gh = null; ghSave(); try { localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_OLD); localStorage.removeItem(MODE_KEY); } catch { }
+  state = blankState(); imposta.confirmLogout = false; contractView = null; expandedMonth = null; setPresent(false);
+  if (!$('#gateForm form')) $('#gateForm').innerHTML += linkFormHTML('Entra') + `<button class="btn ghost" type="button" data-act="localOnly" style="width:100%;margin-top:8px">Solo su questo dispositivo</button>`;
+  $('#gate').classList.remove('hidden'); setStatus('local'); showTab('oggi');
 }
 function toast(msg, action) {
   const t = $('#toast'); t.innerHTML = esc(msg) + (action ? `<button data-act="toastAct">${esc(action.label)}</button>` : ''); t._action = action?.fn || null;
@@ -1051,7 +1059,7 @@ function onAct(act, el) {
     case 'import': $('#importFile').click(); break;
     case 'doImport': state = sheet.st; persist(); closeSheet(); contractView = null; expandedMonth = null; render(); toast('Caricato'); break;
     case 'sample': if (!imposta.confirmSample) { imposta.confirmSample = true; render(); return; } imposta.confirmSample = false; state = sampleState(); persist(); contractView = null; expandedMonth = null; showTab('oggi'); toast('Esempio caricato'); break;
-    case 'ghUnlink': gh = null; ghSave(); try { localStorage.setItem(MODE_KEY, 'local'); } catch { } setStatus('local'); render(); toast('Scollegato'); break;
+    case 'logout': if (!imposta.confirmLogout) { imposta.confirmLogout = true; render(); return; } logout(); break;
     case 'localOnly': try { localStorage.setItem(MODE_KEY, 'local'); } catch { } $('#gate').classList.add('hidden'); setStatus('local'); render(); break;
     case 'useLoan': useLoan(); break;
     case 'toastAct': { const t = $('#toast'); const fn = t._action; t._action = null; t.classList.remove('show'); if (fn) fn(); break; }

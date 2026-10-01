@@ -16,7 +16,7 @@ Appena entri sai se i lavori sono coperti. Segni quello che paghi, e il resto si
 
 **Correggere.** Dopo *Fatto* c'è *Annulla*. Più tardi tocchi la riga, in un mese o nella scheda del contratto: cambi importo e data, oppure *Non l'ho pagato*.
 
-**Imposta.** Da parte oggi, quanto metti al mese, sotto quanto non vuoi scendere, inizio e durata dei lavori. Il prestito: quanto ti serve e la rata. Backup e collegamento.
+**Imposta.** Da parte oggi, quanto metti al mese, sotto quanto non vuoi scendere, inizio e durata dei lavori. Il prestito: quanto ti serve e la rata. Backup, collegamento, Esci.
 
 ## Come ragiona
 
@@ -39,9 +39,9 @@ L'app è una pagina statica: nessun server, nessun account, niente che passi da 
 
 1. Crea un repo privato vuoto, con un README così ha già il branch `main`. Il nome lo scegli tu.
 2. GitHub → Settings → Developer settings → Personal access tokens → *Fine-grained tokens*. Repository access: *Only select repositories* → quel repo. Permissions → *Contents: Read and write*. Scadenza fino a un anno.
-3. Apri l'app, scrivi il repo come `nome/repo`, incolla il token, *Entra*. Il browser chiede di salvarlo come una password: dì di sì. Sul telefono: *Aggiungi a Home*.
+3. Apri l'app, scrivi il repo come `nome/repo`, incolla il token, *Entra*. Il browser chiede di salvarlo come una password: dì di sì. Sul telefono: *Aggiungi a Home*. *Esci* toglie token e dati dal dispositivo: i dati restano nel repo.
 
-Quando il token scade l'app segna *Offline* e lo dice: ne generi un altro, Imposta → Scollega, rientri. Nel frattempo i dati restano sul dispositivo.
+Quando il token scade l'app segna *Offline* e lo dice: ne generi un altro, Imposta → Esci, rientri. Nel frattempo i dati restano sul dispositivo.
 
 Per avere una copia tua dell'app: fai un fork e accendi GitHub Pages sul branch `main`.
 
