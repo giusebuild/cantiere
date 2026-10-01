@@ -12,18 +12,18 @@ Appena entri sai se i lavori sono coperti. Segni quello che paghi, e il resto si
 
 **Il +.** Per quello che non era previsto: ho pagato o ho incassato, quanto, per cosa, quando. Se scegli un contratto che ha pagamenti in attesa, te li propone.
 
-**Cantiere.** *Mesi*: il grafico di quanto hai da parte a fine mese, con la fascia dei lavori. Sotto, un mese alla volta con le frecce. *Contratti*: una scheda per ognuno, impresa, architetto, ogni fornitore, con totale, pagato, resta, prossimo pagamento. **Mostra** nasconde tutto il resto: resta solo quella scheda, da far vedere a chi di dovere.
+**Cantiere.** *Mesi*: il grafico di quanto hai da parte a fine mese, con la fascia dei lavori, dal primo all'ultimo pagamento dei contratti. Sotto, un mese alla volta con le frecce. *Contratti*: una scheda per ognuno, impresa, architetto, ogni fornitore, con totale, pagato, resta, prossimo pagamento. **Mostra** nasconde tutto il resto: resta solo quella scheda, da far vedere a chi di dovere.
 
 **Correggere.** Dopo *Fatto* c'è *Annulla*. Più tardi tocchi la riga, in un mese o nella scheda del contratto: cambi importo e data, oppure *Non l'ho pagato*.
 
-**Imposta.** Da parte oggi, quanto metti al mese, sotto quanto non vuoi scendere, inizio e durata dei lavori. Il prestito: quanto ti serve e la rata. Backup, collegamento, Esci.
+**Imposta.** Da parte oggi, quanto metti al mese, sotto quanto non vuoi scendere, inizio dei lavori. Il prestito: quanto ti serve e la rata. Backup, collegamento, Esci.
 
 ## Come ragiona
 
 - Parte da quanto hai **da parte oggi**. Ogni mese aggiunge quello che riesci a mettere e toglie i pagamenti previsti non ancora fatti.
 - Un pagamento segnato è reale: ha data e importo veri e sparisce dal futuro. Il previsto resta accanto, così vedi se stai sforando.
 - Un pagamento previsto con mese passato e non segnato è **in ritardo**: conta nel mese corrente finché non lo segni o lo sposti.
-- I pagamenti "rispetto ai lavori" (inizio lavori, inizio +3, fine lavori) si spostano da soli se cambi il mese di inizio.
+- I pagamenti "rispetto ai lavori" (inizio lavori, inizio +3) si spostano da soli se cambi il mese di inizio.
 - **Verdetto**: verde se non scendi mai sotto il minimo che hai scelto, giallo se ci scendi ma resti sopra zero, rosso se vai sotto zero. Le barre hanno gli stessi colori. Il prestito consigliato è il più piccolo, a scatti di 500, che ti tiene sopra quel minimo, rate comprese.
 - **Rata**: ammortamento alla francese col solo TAN. Una stima, non un preventivo.
 
