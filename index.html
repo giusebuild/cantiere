@@ -328,6 +328,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 (() => {
 'use strict';
 /* ===== utils ===== */
+const BUILD = '1 ott 2026, 12:09';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -777,6 +778,7 @@ function renderImposta() {
     </div>
     <div class="card"><div class="card-head"><h2>Dati</h2><span class="muted" style="font-size:12px;font-weight:700">${gh ? esc(gh.repo) : 'solo qui'}</span></div>
       <div class="actions"><button class="btn" data-act="export">Scarica backup</button><button class="btn" data-act="import">Carica backup</button><button class="btn ghost" data-act="sample">${imposta.confirmSample ? 'Confermi? Sostituisco tutto' : 'Esempio'}</button>${gh ? `<button class="btn ghost" data-act="logout">${imposta.confirmLogout ? 'Confermi? Esco' : 'Esci'}</button>` : ''}</div>
+      <div class="hint" style="margin-top:10px;display:flex;justify-content:space-between;align-items:center"><span>versione ${BUILD}</span><button class="link" data-act="reload">Ricarica</button></div>
       ${imposta.confirmLogout ? '<div class="hint" style="margin-top:8px">I dati restano nel repo. Da questo dispositivo spariscono.</div>' : ''}
       ${gh ? '' : `<details style="margin-top:12px"><summary class="hint" style="cursor:pointer;font-weight:700">Collega GitHub</summary><div style="margin-top:10px">${linkFormHTML('Collega')}</div></details>`}
     </div>`;
@@ -1072,6 +1074,7 @@ function onAct(act, el) {
     case 'logout': if (!imposta.confirmLogout) { imposta.confirmLogout = true; render(); return; } logout(); break;
     case 'localOnly': try { localStorage.setItem(MODE_KEY, 'local'); } catch { } $('#gate').classList.add('hidden'); setStatus('local'); render(); break;
     case 'useLoan': useLoan(); break;
+    case 'reload': location.reload(); break;
     case 'toastAct': { const t = $('#toast'); const fn = t._action; t._action = null; t.classList.remove('show'); if (fn) fn(); break; }
     case 'closeSheet': closeSheet(); break;
   }
@@ -1115,7 +1118,13 @@ state = local || blankState(); render();
 if (gh) { setStatus('saving'); pullCloud(true); }
 else if (mode === 'local' || local) setStatus('local');
 else { $('#gateForm').innerHTML += linkFormHTML('Entra') + `<button class="btn ghost" type="button" data-act="localOnly" style="width:100%;margin-top:8px">Solo su questo dispositivo</button>`; $('#gate').classList.remove('hidden'); autoSignIn(); }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && gh && !pendingSave) pullCloud(false); });
+let lastCheck = 0;
+async function checkUpdate() {
+  if (!navigator.onLine || location.protocol === 'file:' || Date.now() - lastCheck < 60000) return; lastCheck = Date.now();
+  try { const r = await fetch(location.pathname, { cache: 'no-store' }); const t = await r.text(); const m = t.match(/const BUILD = '([^']+)'/); if (m && m[1] !== BUILD) toast("C'è una versione nuova", { label: 'Ricarica', fn: () => location.reload() }); } catch { }
+}
+setTimeout(checkUpdate, 4000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; checkUpdate(); if (gh && !pendingSave) pullCloud(false); });
 window.addEventListener('online', () => { if (gh && pendingSave) pushCloud(); });
 })();
 </script>
