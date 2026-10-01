@@ -1,0 +1,7 @@
+.DS_Store
+Thumbs.db
+*.log
+# in locale resta, nel repo pubblico no
+archivio/
+# export JSON scaricati dall'app: backup personali, non codice
+finanze-lavori-*.json

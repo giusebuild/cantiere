@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planner cassa ristrutturazione</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121933;
+      --panel-2:#182242;
+      --muted:#8fa0c7;
+      --text:#eef3ff;
+      --accent:#6ea8fe;
+      --accent-2:#77e0c6;
+      --danger:#ff6b7a;
+      --warning:#ffb86b;
+      --ok:#61d095;
+      --line:#2a3763;
+      --chip:#22315c;
+      --shadow:0 16px 40px rgba(0,0,0,.25);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:linear-gradient(180deg,#0a1020 0%,#0d1430 100%);
+      color:var(--text);
+    }
+	.wrap{
+	  max-width:1500px;
+	  margin:0 auto;
+	  padding:32px 28px;
+	}    h1,h2,h3{margin:0}
+    h1{font-size:28px}
+    h2{font-size:20px}
+    h3{font-size:16px}
+    .sub{color:var(--muted);margin-top:6px}
+    .topbar{
+      display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px;flex-wrap:wrap
+    }
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    button,.btn,label.file-btn{
+      border:none;
+      background:var(--panel-2);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+      box-shadow:var(--shadow);
+      border:1px solid var(--line);
+      display:inline-flex;align-items:center;gap:8px
+    }
+    button:hover,.btn:hover,label.file-btn:hover{filter:brightness(1.08)}
+    .primary{background:linear-gradient(135deg,#3c7cff,#5ea3ff)}
+    .good{background:linear-gradient(135deg,#0f8b6d,#2fbf9f)}
+    .warn{background:linear-gradient(135deg,#ad6b00,#e69714)}
+    .danger{background:linear-gradient(135deg,#bb3250,#ea5b78)}
+    input,select,textarea{
+      width:100%;padding:10px 12px;background:#0e1733;color:var(--text);
+      border:1px solid var(--line);border-radius:12px;outline:none;
+    }
+    input[type="number"]{appearance:textfield}
+    .grid{
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:18px;
+    }
+    .leftcol,.rightcol{display:grid;gap:18px}
+    .card{
+      background:linear-gradient(180deg,rgba(22,31,65,.95),rgba(16,24,51,.98));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:24px;
+      box-shadow:var(--shadow);
+    }
+	.card + .card {
+	  margin-top: 24px;
+	}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    
+	.stat{
+	  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+	  border:1px solid rgba(255,255,255,0.08);
+	  border-radius:18px;
+	  padding:16px;
+	  transition:all .2s ease;
+	}
+
+	.stat:hover{
+	  transform: translateY(-2px);
+	  border-color: rgba(110,168,254,0.4);
+	}
+    .stat .k{font-size:12px;color:var(--muted)}
+    .stat .v{font-size:24px;font-weight:800;margin-top:6px}
+    .v.neg{color:var(--danger)}
+    .v.pos{color:var(--ok)}
+	.chart-wrap{
+	  margin-top:24px;
+	  padding-top:16px;
+	  border-top:1px solid rgba(255,255,255,0.06);
+	}    #chart{width:100%;height:340px;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border-radius:14px;border:1px solid var(--line)}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    .tab.active{outline:2px solid rgba(110,168,254,.5);background:#24407c}
+    .hidden{display:none !important}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top}
+    th{font-size:12px;color:var(--muted);font-weight:700}
+    td small{color:var(--muted)}
+    tr.neg-row{background:rgba(255,107,122,.08)}
+    .chip{
+      background:var(--chip);display:inline-flex;padding:6px 10px;border-radius:999px;
+      font-size:12px;color:#c7d7ff;border:1px solid var(--line)
+    }
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
+    .span-2{grid-column:span 2}.span-3{grid-column:span 3}.span-4{grid-column:span 4}
+    .span-5{grid-column:span 5}.span-6{grid-column:span 6}.span-8{grid-column:span 8}
+    .span-12{grid-column:span 12}
+    .section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+    .muted{color:var(--muted)}
+    .tiny{font-size:12px}
+    .inline-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .item-card{
+      border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(255,255,255,.03);margin-bottom:12px
+    }
+    .item-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+    .pill-neg{color:#ffd8de;background:rgba(255,107,122,.15);border-color:rgba(255,107,122,.35)}
+    .pill-pos{color:#d7ffea;background:rgba(97,208,149,.13);border-color:rgba(97,208,149,.35)}
+    .divider{height:1px;background:rgba(255,255,255,.08);margin:12px 0}
+    .footer-note{margin-top:12px;color:var(--muted);font-size:12px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .right{ text-align:right }
+    @media (max-width: 1100px){
+      .grid{grid-template-columns:1fr}
+      .stats{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width: 700px){
+      .stats{grid-template-columns:1fr}
+      .row{grid-template-columns:1fr}
+      .span-2,.span-3,.span-4,.span-5,.span-6,.span-8,.span-12{grid-column:span 1}
+      .topbar{align-items:stretch}
+      .actions{width:100%}
+    }
+    .worst-row{
+		   border-left:4px solid var(--danger);
+		   background: rgba(255,107,122,0.08);
+		 }
+    .installments-table {
+      min-width: 900px;
+    }
+
+    .installments-table th,
+    .installments-table td {
+      white-space: nowrap;
+    }
+
+    .installments-table input,
+    .installments-table select {
+      min-width: 90px;
+    }
+
+    .installments-table td:nth-child(6) {
+      min-width: 140px;
+    }
+
+    .installments-table td:last-child {
+      display:flex;
+      gap:6px;
+    }
+    .income-grid {
+      display: grid;
+      grid-template-columns: 
+        2fr      /* nome */
+        1.2fr    /* tipo */
+        1fr      /* importo */
+        1.3fr    /* mese ← FIX */
+        1.2fr;   /* ricorrente */
+      gap: 12px;
+      align-items: end;
+    }
+
+    .income-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .income-grid > div {
+      min-width: 0;
+    }
+    .expense-grid {
+      display:grid;
+      grid-template-columns: 2.5fr 1.3fr 1fr 1fr 1.2fr;
+      gap:12px;
+      align-items:end;
+    }
+
+    .expense-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .expense-grid > div {
+      min-width:0;
+    }
+    .clickable {
+      cursor: pointer;
+    }
+
+    .clickable:hover {
+      background: rgba(255,255,255,0.04);
+    }
+	#dashboardTab .card {
+	  margin-bottom: 16px;
+	}
+	#chart {
+	  height: 400px;
+	}
+	h2{
+	  font-size:18px;
+	  font-weight:700;
+	  letter-spacing:0.3px;
+	}
+
+	.section-title{
+	  margin-bottom:18px;
+	}
+	table {
+	  border-spacing: 0 6px;
+	  border-collapse: separate;
+	}
+
+	tbody tr {
+	  background: rgba(255,255,255,0.02);
+	  border-radius: 10px;
+	  transition: all .2s ease;
+	}
+
+	tbody tr:hover {
+	  background: rgba(255,255,255,0.05);
+	}
+	#dashboardTab .card {
+	  margin-bottom: 24px;
+	}
+	
+	.stat.worst{
+	  border:1px solid rgba(255,107,122,0.4);
+	  background: rgba(255,107,122,0.08);
+	}
+	.month-cell {
+	  min-width: 180px;
+	}
+
+	.month-main {
+	  display:flex;
+	  gap:8px;
+	  align-items:center;
+	}
+
+	.month-sub {
+	  font-size:12px;
+	  color:var(--muted);
+	  margin-top:4px;
+	}
+
+	.arrow {
+	  opacity:.7;
+	}
+
+	.details-grid {
+	  display:grid;
+	  grid-template-columns:1fr 1fr;
+	  gap:20px;
+	  padding:10px 0;
+	}
+
+	.details-title {
+	  font-size:13px;
+	  font-weight:700;
+	  margin-bottom:6px;
+	}
+
+	.detail-row {
+	  display:flex;
+	  justify-content:space-between;
+	  padding:4px 0;
+	  border-bottom:1px dashed rgba(255,255,255,.06);
+	}
+
+	.month-row:hover .arrow {
+	  transform: translateX(3px);
+	}
+    
+    /* ===== MOBILE MODE IPHONE ===== */
+@media (max-width: 600px){
+
+  .wrap{
+    padding:16px 12px;
+  }
+
+  h1{font-size:20px}
+  h2{font-size:16px}
+
+  .card{
+    padding:16px;
+    border-radius:14px;
+  }
+
+  /* BOTTONI GRANDI */
+  button, .btn, label.file-btn{
+    padding:14px;
+    font-size:14px;
+    width:100%;
+    justify-content:center;
+  }
+
+  .actions{
+    width:100%;
+    flex-direction:column;
+  }
+
+  /* STATS → 1 colonna */
+  .stats{
+    grid-template-columns:1fr !important;
+  }
+
+  /* GRID → verticale */
+  .row,
+  .income-grid,
+  .expense-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  /* NASCONDI TABELLA */
+  table{
+    display:none;
+  }
+
+  /* TIMELINE → CARD */
+  #timelineBody{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  #timelineBody tr{
+    display:block;
+    background:rgba(255,255,255,0.03);
+    padding:12px;
+    border-radius:12px;
+  }
+
+  #timelineBody td{
+    display:flex;
+    justify-content:space-between;
+    border:none;
+    padding:4px 0;
+  }
+
+  /* CHART PIÙ BASSO */
+  #chart{
+    height:260px !important;
+  }
+
+  /* NAV BOTTOM (APP STYLE) */
+  .tabs{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    background:#0e1733;
+    border-top:1px solid var(--line);
+    padding:8px;
+    z-index:100;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+  }
+
+  .tab{
+    padding:10px;
+    font-size:12px;
+    border-radius:10px;
+  }
+
+  /* spazio per nav */
+  body{
+    padding-bottom:80px;
+  }
+
+}
+.net {
+  font-weight:600;
+  font-size:13px;
+  opacity:0.7;
+}
+.net.pos { color: var(--ok); }
+.net.neg { color: var(--danger); }
+
+/* colori riga */
+.row-positive { background: transparent; }
+.row-negative { background: rgba(255,107,122,0.06); }
+
+/* HEATMAP */
+.heatmap {
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px,1fr));
+  gap:10px;
+  margin-top:16px;
+}
+
+.heat {
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
+  font-size:12px;
+  border:1px solid var(--line);
+}
+
+.heat strong {
+  display:block;
+  font-size:14px;
+  margin-top:4px;
+}
+
+.heat.pos { background: rgba(97,208,149,0.15); }
+.heat.neg { background: rgba(255,107,122,0.15); }
+.heat.mid { background: rgba(255,255,255,0.05); }
+td.right {
+  padding-left: 16px;
+}
+.month-row {
+  position: relative;
+}
+
+.month-row::after {
+  content: "clicca";
+  position: absolute;
+  right: 10px;
+  top: 6px;
+  font-size: 10px;
+  opacity: 0.3;
+}
+.expense-wrap{
+  display:grid;
+  grid-template-columns: 220px 1fr;
+  gap:20px;
+  align-items:center;
+}
+
+.expense-legend{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.legend-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 10px;
+  border-radius:10px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line);
+}
+
+.legend-left{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.legend-color{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+}
+
+.legend-name{
+  font-size:13px;
+}
+
+.legend-value{
+  font-weight:600;
+}
+.expense-bars{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.bar{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  opacity:0.8;
+  transition:all .2s ease;
+  cursor:pointer;
+}
+.bar:hover{
+  opacity:1;
+  transform:scale(1.02);
+}
+
+.bar-top{
+  display:flex;
+  justify-content:space-between;
+  font-size:13px;
+}
+
+.bar-track{
+  height:8px;
+  background:rgba(255,255,255,0.06);
+  border-radius:999px;
+  overflow:hidden;
+}
+
+.bar-fill{
+  height:100%;
+  border-radius:999px;
+  transition:width .4s ease;
+}
+.active-bar{
+  outline:2px solid #6ea8fe;
+  opacity:1;
+}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>Planner cassa ristrutturazione</h1>
+        <div class="sub">Cash flow mensile, simulazioni veloci, import/export JSON. Un solo file HTML, niente server, niente circo.</div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="loadSampleBtn">Carica esempio</button>
+        <label class="file-btn" for="importJsonInput">Importa JSON</label>
+        <input id="importJsonInput" type="file" accept=".json,application/json" class="hidden"/>
+        <button class="btn good" id="exportJsonBtn">Esporta JSON</button>
+      </div>
+    </div>
+
+    <div class="card">
+
+	  <div class="tabs">
+           <button class="tab active" data-tab="dashboardTab">Dashboard</button>
+           <button class="tab" data-tab="incomeTab">Entrate</button>
+           <button class="tab" data-tab="expenseTab">Spese</button>
+         </div>
+         
+         
+	  <!-- DASHBOARD -->
+	  <div id="dashboardTab" class="tab-panel">
+
+		<!-- impostazioni -->
+		<div class="card">
+		  <h2>Impostazioni piano</h2>
+		  <div class="row">
+			<div class="span-4">
+			  <label>Primo mese</label>
+			  <input type="month" id="startMonth"/>
+			</div>
+			<div class="span-4">
+			  <label>Ultimo mese</label>
+			  <input type="month" id="endMonth"/>
+			</div>
+			<div class="span-4">
+			  <label>Saldo iniziale (€)</label>
+			  <input type="number" step="0.01" id="initialCash"/>
+			</div>
+		  </div>
+		</div>
+
+		<!-- stats + chart -->
+		<div class="card">
+		  <div class="stats" id="stats"></div>
+		  <div class="chart-wrap">
+			<canvas id="chart"></canvas>
+		  </div>
+		</div>
+		
+		<div class="card">
+		   <h2>Distribuzione spese</h2>
+		   <div class="expense-wrap">
+		   <canvas id="expenseChart" height="220"></canvas>
+		   <div id="expenseLegend" class="expense-bars"></div>
+		 </div>
+
+		 </div>
+		 <div id="filterBadge" class="tiny muted" style="margin-bottom:10px;"></div>
+		<!-- timeline -->
+		<div class="card" style="margin-top:16px">
+		  <h2>Timeline mensile</h2>
+		  <div style="overflow:auto">
+			<table>
+			  <thead>
+				<tr>
+				  <th>Mese</th>
+				  <th class="right">Entrate</th>
+				  <th class="right">Uscite</th>
+				  <th class="right">Cumulato</th>
+				  <th>Stato</th>
+				</tr>
+			  </thead>
+			  <tbody id="timelineBody"></tbody>
+			</table>
+		  </div>
+		</div>
+
+	  </div>
+
+	  <!-- ENTRATE -->
+	  <div id="incomeTab" class="tab-panel hidden">
+		<div class="section-title">
+		  <h2>Entrate</h2>
+		  <button class="primary" id="addIncomeBtn">+ Aggiungi entrata</button>
+		</div>
+		<div id="incomeList"></div>
+	  </div>
+
+	  <!-- SPESE -->
+	  <div id="expenseTab" class="tab-panel hidden">
+		<div class="section-title">
+		  <h2>Spese</h2>
+		  <button class="primary" id="addExpenseBtn">+ Aggiungi spesa</button>
+		</div>
+		<div id="expenseList"></div>
+	  </div>
+
+	</div>
+  </div>
+
+<script>
+(() => {
+  const monthNames = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
+  const currency = new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" });
+
+  const qs = sel => document.querySelector(sel);
+  const qsa = sel => Array.from(document.querySelectorAll(sel));
+  const uid = () => Math.random().toString(36).slice(2, 10);
+
+  const state = {
+    plan: {
+      startMonth: "2025-04",
+      endMonth: "2025-12",
+      initialCash: 12000
+    },
+    incomes: [],
+    expenses: []
+	};
+	let filterMode = "visual"; // "visual" | "strict"
+let expandedMonths = new Set();
+let activeCategory = null;
+  function sampleData() {
+		   return {
+			 plan: {
+			   startMonth: "2026-04",
+			   endMonth: "2026-10",
+			   initialCash: 25000
+			 },
+
+			 incomes: [
+			   {
+				 id: uid(),
+				 label: "Stipendio",
+				 type: "stipendio",
+				 amount: 1000,
+				 month: "2026-05",
+				 recurringMonthly: true,
+				 notes: "Accredito intorno al 15"
+			   },
+			   {
+				 id: uid(),
+				 label: "Prestito",
+				 type: "prestito",
+				 amount: 1000,
+				 month: "2026-07",
+				 recurringMonthly: false,
+				 notes: "Liquidità extra"
+			   }
+			 ],
+
+			 expenses: [
+			   {
+				 id: uid(),
+				 label: "Impresa",
+				 category: "Impresa",
+				 baseAmount: 30000,
+				 extraPercent: 10,
+				 notes: "Acconto, SAL, saldo",
+				 recurring: false,
+				 installments: [
+				   { id: uid(), mode: "percent", value: 30, month: "2026-06", paid: false, actualAmount: 0, note: "Acconto 30%" },
+				   { id: uid(), mode: "percent", value: 40, month: "2026-07", paid: false, actualAmount: 0, note: "SAL 40%" },
+				   { id: uid(), mode: "percent", value: 30, month: "2026-09", paid: false, actualAmount: 0, note: "Saldo 30%" }
+				 ]
+			   },
+
+			   {
+				 id: uid(),
+				 label: "Architetto / Geometra / Ingegnere",
+				 category: "Professionisti",
+				 baseAmount: 6000,
+				 extraPercent: 4,
+				 notes: "Distribuzione per fasi",
+				 recurring: false,
+				 installments: [
+				   { id: uid(), mode: "fixed", value: 2080, month: "2026-05", paid: false, actualAmount: 0, note: "Incarico" },
+				   { id: uid(), mode: "fixed", value: 1560, month: "2026-05", paid: false, actualAmount: 0, note: "Preliminare" },
+				   { id: uid(), mode: "fixed", value: 1560, month: "2026-07", paid: false, actualAmount: 0, note: "Avvio lavori" },
+				   { id: uid(), mode: "fixed", value: 1040, month: "2026-09", paid: false, actualAmount: 0, note: "Chiusura" }
+				 ]
+			   },
+
+			   {
+				 id: uid(),
+				 label: "Materiali bagno",
+				 category: "Materiali",
+				 baseAmount: 2695,
+				 extraPercent: 0,
+				 notes: "Doccia, sanitari, mobile bagno",
+				 recurring: false,
+				 installments: [
+				   { id: uid(), mode: "fixed", value: 1200, month: "2026-06", paid: false, actualAmount: 0, note: "Prima fornitura" },
+				   { id: uid(), mode: "fixed", value: 1495, month: "2026-06", paid: false, actualAmount: 0, note: "Seconda fornitura" }
+				 ]
+			   },
+
+			   {
+				 id: uid(),
+				 label: "Materiali pavimento",
+				 category: "Materiali",
+				 baseAmount: 1275,
+				 extraPercent: 0,
+				 notes: "",
+				 recurring: false,
+				 installments: [
+				   { id: uid(), mode: "fixed", value: 1275, month: "2026-06", paid: true, actualAmount: 1275, note: "Pavimento" }
+				 ]
+			   },
+
+			   {
+				 id: uid(),
+				 label: "Cucina",
+				 category: "Arredi",
+				 baseAmount: 4000,
+				 extraPercent: 0,
+				 notes: "Trasporto + saldo",
+				 recurring: false,
+				 installments: [
+				   { id: uid(), mode: "fixed", value: 500, month: "2026-08", paid: false, actualAmount: 0, note: "Trasporto" },
+				   { id: uid(), mode: "fixed", value: 3500, month: "2026-08", paid: false, actualAmount: 0, note: "Saldo" }
+				 ]
+			   },
+
+			   {
+				 id: uid(),
+				 label: "Mutuo",
+				 category: "Altro",
+				 baseAmount: 650,
+				 extraPercent: 0,
+				 notes: "Rata mensile mutuo",
+				 recurring: true,
+				 recurringStart: "2026-05",
+				 recurringEnd: "2026-10"
+			   },
+
+			   {
+				 id: uid(),
+				 label: "Viaggio",
+				 category: "Altro",
+				 baseAmount: 1000,
+				 extraPercent: 0,
+				 notes: "Weekend lungo",
+				 recurring: false,
+				 installments: [
+				   { id: uid(), mode: "fixed", value: 1000, month: "2026-04", paid: false, actualAmount: 0, note: "Pagamento unico" }
+				 ]
+			   }
+			 ]
+		   };
+		 }
+
+  function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+  function monthRange(start, end){
+    const out = [];
+    let [y, m] = start.split("-").map(Number);
+    const [ey, em] = end.split("-").map(Number);
+    while (y < ey || (y === ey && m <= em)) {
+      out.push(`${y}-${String(m).padStart(2, "0")}`);
+      m++;
+      if (m > 12){ m = 1; y++; }
+    }
+    return out;
+  }
+
+  function labelMonth(ym){
+    const [y,m] = ym.split("-").map(Number);
+    return `${monthNames[m-1]} ${y}`;
+  }
+
+  function fmt(v){ return currency.format(Number(v || 0)); }
+
+  function round2(n){ return Math.round((Number(n) + Number.EPSILON) * 100) / 100; }
+
+  function totalWithExtra(expense){
+    return round2(Number(expense.baseAmount || 0) * (1 + Number(expense.extraPercent || 0)/100));
+  }
+
+  function installmentPlannedAmount(expense, inst){
+    const total = totalWithExtra(expense);
+    if (inst.mode === "percent") return round2(total * Number(inst.value || 0) / 100);
+    return round2(Number(inst.value || 0));
+  }
+
+  function expensePlannedVsScheduled(expense){
+    const total = totalWithExtra(expense);
+    const scheduled = round2((expense.installments || []).reduce((s, i) => s + installmentPlannedAmount(expense, i), 0));
+    return { total, scheduled, delta: round2(total - scheduled) };
+  }
+
+  function getExpandedIncomes(months){
+    const res = [];
+    for (const inc of state.incomes){
+      if (inc.recurringMonthly){
+        for (const month of months){
+          if (month >= inc.month) {
+            res.push({ month, amount: Number(inc.amount || 0), type: inc.type, label: inc.label, sourceId: inc.id });
+          }
+        }
+      } else {
+        res.push({ month: inc.month, amount: Number(inc.amount || 0), type: inc.type, label: inc.label, sourceId: inc.id });
+      }
+    }
+    return res;
+  }
+
+  function getExpandedExpenses(months){
+		   const res = [];
+
+		   for (const exp of state.expenses){
+
+			 // 🔁 RICORRENTE
+			 if (exp.recurring){
+			   for (const month of months){
+				 if (month >= exp.recurringStart && (!exp.recurringEnd || month <= exp.recurringEnd)){
+
+				  res.push({
+					month,
+					amount: totalWithExtra(exp),
+					label: exp.label,
+					category: exp.category,
+					note: exp.notes || ""
+				  });
+				 }
+			   }
+			   continue;
+			 }
+
+			 // 💣 NON ricorrente → usa tranche
+			 for (const inst of (exp.installments || [])){
+			   
+
+				  res.push({
+					month: inst.month,
+					amount: inst.paid && Number(inst.actualAmount || 0) > 0
+					  ? Number(inst.actualAmount || 0)
+					  : installmentPlannedAmount(exp, inst),
+					label: exp.label,
+					category: exp.category,
+					note: inst.note || exp.notes || ""
+				  });
+				  
+			 }
+		   }
+
+		   return res;
+		 }
+  
+  
+
+  function compute(){
+           const months = monthRange(state.plan.startMonth, state.plan.endMonth);
+
+           const map = Object.fromEntries(
+             months.map(m => [m, { month:m, incomes:0, expenses:0, rowsIn:[], rowsOut:[] }])
+           );
+
+           const incomeRows = getExpandedIncomes(months);
+           const expenseRows = getExpandedExpenses(months);
+
+           // entrate
+           incomeRows.forEach(r => {
+             if (!map[r.month]) return;
+             map[r.month].incomes += Number(r.amount || 0);
+             map[r.month].rowsIn.push(r);
+           });
+
+           // spese normali
+           expenseRows.forEach(r => {
+             if (!map[r.month]) return;
+             map[r.month].expenses += Number(r.amount || 0);
+             map[r.month].rowsOut.push(r);
+           });
+		   
+
+           let cumulative = Number(state.plan.initialCash || 0);
+
+           const timeline = months.map(month => {
+             const incomes = round2(map[month].incomes);
+             const expenses = round2(map[month].expenses);
+             const net = round2(incomes - expenses);
+             cumulative = round2(cumulative + net);
+
+             return {
+               month,
+               incomes,
+               expenses,
+               net,
+               cumulative,
+               rowsIn: map[month].rowsIn,
+               rowsOut: map[month].rowsOut
+             };
+           });
+
+           const minMonth = timeline.reduce((a,b) => b.cumulative < a.cumulative ? b : a, timeline[0]);
+           const negatives = timeline.filter(t => t.cumulative < 0);
+           
+           return {
+             months,
+             timeline,
+             totalIncomes: round2(timeline.reduce((s,t) => s + t.incomes, 0)),
+             totalExpenses: round2(timeline.reduce((s,t) => s + t.expenses, 0)),
+             endingCash: timeline.at(-1)?.cumulative ?? state.plan.initialCash,
+             minCash: minMonth.cumulative,
+             minCashMonth: minMonth.month,
+             negativeMonths: negatives
+           };
+         }
+
+  function renderStats(data){
+    const stats = qs("#stats");
+    const minCls = data.minCash < 0 ? "neg" : "pos";
+    const endCls = data.endingCash < 0 ? "neg" : "pos";
+    stats.innerHTML = `
+      <div class="stat ${data.minCash < 0 ? 'worst' : ''}">
+        <div class="k">Saldo iniziale</div>
+        <div class="v">${fmt(state.plan.initialCash)}</div>
+      </div>
+      <div class="stat ${data.minCash < 0 ? 'worst' : ''}">
+        <div class="k">Totale entrate piano</div>
+        <div class="v pos">${fmt(data.totalIncomes)}</div>
+      </div>
+      <div class="stat ${data.minCash < 0 ? 'worst' : ''}">
+        <div class="k">Totale uscite piano</div>
+        <div class="v">${fmt(data.totalExpenses)}</div>
+      </div>
+      <div class="stat ${data.minCash < 0 ? 'worst' : ''}">
+        <div class="k">Saldo finale</div>
+        <div class="v ${endCls}">${fmt(data.endingCash)}</div>
+      </div>
+      <div class="stat ${data.minCash < 0 ? 'worst' : ''}">
+        <div class="k">Picco minimo di cassa</div>
+        <div class="v ${minCls}">${fmt(data.minCash)}</div>
+        <div class="tiny muted">${labelMonth(data.minCashMonth)}</div>
+      </div>
+      <div class="stat ${data.minCash < 0 ? 'worst' : ''}">
+        <div class="k">Mesi sotto zero</div>
+        <div class="v ${data.negativeMonths.length ? 'neg' : 'pos'}">${data.negativeMonths.length}</div>
+      </div>
+      <div class="stat ${data.minCash < 0 ? 'worst' : ''}">
+        <div class="k">Entrate ricorrenti</div>
+        <div class="v">${state.incomes.filter(i => i.recurringMonthly).length}</div>
+      </div>
+      <div class="stat ${data.minCash < 0 ? 'worst' : ''}">
+        <div class="k">Spese pianificate</div>
+        <div class="v">${state.expenses.length}</div>
+      </div>
+    `;
+  }
+	function renderTimeline(data){
+		   const body = qs("#timelineBody");
+
+		   body.innerHTML = data.timeline.map(t => {
+
+					const netClass = t.net > 0 ? "pos" : t.net < 0 ? "neg" : "";
+					const rowClass = t.net > 0 ? "row-positive" : t.net < 0 ? "row-negative" : "";
+
+					const filteredOut = t.rowsOut.filter(r => !activeCategory || r.category === activeCategory);
+					const filteredTotal = filteredOut.reduce((s,r)=>s+r.amount,0);
+
+			 return `
+			 <tr class="clickable month-row ${rowClass} ${t.month === data.minCashMonth ? "worst-row" : ""}" data-month="${t.month}">
+			   
+			   <td class="month-cell">
+				 <div class="month-main">
+				   <span class="arrow">${expandedMonths.has(t.month) ? "▼" : "▶"}</span>
+				   <strong>${labelMonth(t.month)}</strong>
+				   <span class="net ${netClass}">
+					 ${t.net > 0 ? "+" : ""}${fmt(t.net)}
+				   </span>
+				 </div>
+			   </td>
+
+			   <td class="right">
+				 <div>${fmt(t.incomes)}</div>
+				 <small class="muted">${t.rowsIn.length} mov.</small>
+			   </td>
+
+			   <td class="right">
+				  <div>${fmt(activeCategory ? filteredTotal : t.expenses)}</div>
+				  <small class="muted">${filteredOut.length} mov.</small>
+			   </td>
+			   
+
+			   <td class="right">
+				 <strong class="${t.cumulative < 0 ? 'neg' : 'pos'}">${fmt(t.cumulative)}</strong>
+			   </td>
+
+			   <td>
+					${t.cumulative < 0
+					  ? `<span class="chip pill-neg">Cassa negativa</span>`
+					  : ``}
+				  </td>
+			 </tr>
+
+			 <tr class="details ${expandedMonths.has(t.month) ? "" : "hidden"}" id="details-${t.month}">
+			   <td colspan="6">
+
+				 <div class="details-grid">
+
+				   <div>
+					 <div class="details-title">Entrate</div>
+					 ${
+					   t.rowsIn.length
+						 ? t.rowsIn.map(r => `
+							 <div class="detail-row">
+							   <span>${escapeHtml(r.label)}</span>
+							   <span>${fmt(r.amount)}</span>
+							 </div>
+						   `).join("")
+						 : '<div class="muted tiny">Nessuna</div>'
+					 }
+				   </div>
+
+				   <div>
+					 <div class="details-title">Uscite</div>
+					 ${
+					   t.rowsOut.length
+						 ? t.rowsOut
+							 .filter(r => !activeCategory || r.category === activeCategory)
+							 .map(r => `	
+						   <div class="detail-row">
+							 <div>
+							   <div>${escapeHtml(r.label)}</div>
+							   ${r.note ? `<div class="tiny muted">
+								  ${escapeHtml(r.category)} · ${escapeHtml(r.note || "")}
+								  </div>` : ""}
+							 </div>
+							 <span>${fmt(r.amount)}</span>
+						   </div>
+						 `).join("")
+						 : '<div class="muted tiny">Nessuna</div>'
+					 }
+				   </div>
+
+				 </div>
+
+			   </td>
+			 </tr>
+			 `;
+		   }).join("");
+		 }
+
+
+  function drawChart(data){
+	const canvas = qs("#chart");
+	const parentWidth = canvas.parentElement.clientWidth;
+	const dpr = window.devicePixelRatio || 1;
+
+	canvas.style.width = parentWidth + "px";
+	canvas.style.height = "400px";
+
+	canvas.width = parentWidth * dpr;
+	canvas.height = 400 * dpr;
+
+	const ctx = canvas.getContext("2d");
+	ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+	const pad = { left: 110, right: 30, top: 60, bottom: 90 };
+	const width = parentWidth;
+	const height = 400;
+
+	const w = width - pad.left - pad.right;
+	const h = height - pad.top - pad.bottom;
+
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	
+    const vals = data.timeline.map(t => t.cumulative);
+    const months = data.timeline.map(t => t.month);
+    const minV = Math.min(0, ...vals, Number(state.plan.initialCash || 0));
+    const maxV = Math.max(...vals, Number(state.plan.initialCash || 0), 1);
+    const span = Math.max(1, maxV - minV);
+    const x = i => pad.left + (months.length === 1 ? w/2 : (i * w / (months.length - 1)));
+    const y = v => pad.top + h - ((v - minV) / span) * h;
+
+    // background grid
+    ctx.strokeStyle = "rgba(255,255,255,.08)";
+    ctx.lineWidth = 1;
+    for (let i=0;i<=4;i++){
+      const gy = pad.top + (h/4)*i;
+      ctx.beginPath(); ctx.moveTo(pad.left, gy); ctx.lineTo(pad.left+w, gy); ctx.stroke();
+      const gv = maxV - (span/4)*i;
+      ctx.fillStyle = "rgba(200,215,255,.7)";
+      ctx.font = "12px sans-serif";
+	  ctx.textAlign = "right";
+	  ctx.fillText(fmt(round2(gv)), pad.left - 30, gy + 4);
+    }
+
+    // zero line
+    if (minV < 0 && maxV > 0){
+      ctx.strokeStyle = "rgba(255,107,122,.45)";
+	  ctx.setLineDash([4,8]);
+	  ctx.lineWidth = 1;
+	  ctx.globalAlpha = 0.6;
+	  ctx.beginPath(); ctx.moveTo(pad.left, y(0)); ctx.lineTo(pad.left+w, y(0)); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // area
+    const gradient = ctx.createLinearGradient(0,pad.top,0,pad.top+h);
+    gradient.addColorStop(0,"rgba(110,168,254,.28)");
+    gradient.addColorStop(1,"rgba(110,168,254,.03)");
+    ctx.beginPath();
+    data.timeline.forEach((t,i) => {
+      if (i === 0) ctx.moveTo(x(i), y(t.cumulative));
+      else ctx.lineTo(x(i), y(t.cumulative));
+    });
+    ctx.lineTo(x(data.timeline.length-1), y(minV));
+    ctx.lineTo(x(0), y(minV));
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // line
+    ctx.beginPath();
+    data.timeline.forEach((t,i) => {
+      if (i === 0) ctx.moveTo(x(i), y(t.cumulative));
+      else ctx.lineTo(x(i), y(t.cumulative));
+    });
+    ctx.strokeStyle = "#79a9ff";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+	
+	// asse X (mesi)
+	ctx.fillStyle = "rgba(200,215,255,.7)";
+	ctx.font = "12px sans-serif";
+	ctx.textAlign = "center";
+
+	data.timeline.forEach((t, i) => {
+	  const px = x(i);
+	  const label = labelMonth(t.month);
+
+	  ctx.fillText(label, px, pad.top + h + 20);
+	});
+	ctx.strokeStyle = "rgba(255,255,255,.1)";
+	ctx.beginPath();
+	ctx.moveTo(pad.left, pad.top + h);
+	ctx.lineTo(pad.left + w, pad.top + h);
+	ctx.stroke();
+	
+	data.timeline.forEach((t, i) => {
+	  const px = x(i);
+
+	  ctx.beginPath();
+	  ctx.moveTo(px, pad.top + h);
+	  ctx.lineTo(px, pad.top + h + 5);
+	  ctx.strokeStyle = "rgba(255,255,255,.2)";
+	  ctx.stroke();
+	});
+    // points and labels
+    data.timeline.forEach((t,i) => {
+	  const px = x(i), py = y(t.cumulative);
+
+	  // glow
+	  ctx.beginPath();
+	  ctx.arc(px, py, 10, 0, Math.PI * 2);
+	  ctx.fillStyle = "rgba(110,168,254,0.15)";
+	  ctx.fill();
+
+	  // punto
+	  ctx.beginPath();
+	  ctx.arc(px, py, 5, 0, Math.PI * 2);
+	  ctx.fillStyle =
+		t.month === data.minCashMonth
+		  ? "#ff3b5c"
+		  : t.cumulative < 0
+			? "#ff6b7a"
+			: "#77e0c6";
+	  ctx.fill();
+
+	  // label sopra punto
+	  ctx.fillStyle = "#cfe0ff";
+	  ctx.font = "12px sans-serif";
+	  ctx.textAlign = "center";
+	  let labelY;
+	  if (py < pad.top + 30) {
+		labelY = py + 18; // sotto il punto
+		} else {
+		labelY = py - 12; // sopra
+		}
+	ctx.fillText(fmt(t.cumulative), px, labelY);
+	ctx.textBaseline = "middle";
+	});
+	
+	ctx.strokeStyle = "#8ab4ff";
+	ctx.lineWidth = 2.5;
+	ctx.lineJoin = "round";
+	ctx.lineCap = "round";
+	
+	bindChartHover(data, x, y);
+  }
+  
+  function bindChartHover(data, x, y) {
+	  const canvas = qs("#chart");
+	  const ctx = canvas.getContext("2d");
+
+	  function handle(mx, my){
+		let found = null;
+
+		data.timeline.forEach((t, i) => {
+		  const px = x(i);
+		  const py = y(t.cumulative);
+
+		  if (Math.hypot(mx - px, my - py) < 15) {
+			found = { ...t, px, py };
+		  }
+		});
+
+		drawChart(data);
+
+		if (found){
+		  ctx.fillStyle = "#0f1b3d";
+		  ctx.fillRect(found.px - 80, found.py - 90, 160, 80);
+
+		  ctx.fillStyle = "#fff";
+		  ctx.font = "12px sans-serif";
+
+		  ctx.fillText(labelMonth(found.month), found.px - 70, found.py - 70);
+		  ctx.fillText("In: " + fmt(found.incomes), found.px - 70, found.py - 50);
+		  ctx.fillText("Out: " + fmt(found.expenses), found.px - 70, found.py - 30);
+		  ctx.fillText("Saldo: " + fmt(found.cumulative), found.px - 70, found.py - 10);
+		}
+	  }
+
+	  canvas.ontouchstart = (e) => {
+		const rect = canvas.getBoundingClientRect();
+		const touch = e.touches[0];
+		handle(touch.clientX - rect.left, touch.clientY - rect.top);
+	  };
+
+	  canvas.onmousemove = (e) => {
+		const rect = canvas.getBoundingClientRect();
+		handle(e.clientX - rect.left, e.clientY - rect.top);
+	  };
+	}
+
+  function renderIncomeList(){
+    const box = qs("#incomeList");
+    if (!state.incomes.length){
+      box.innerHTML = `<div class="muted tiny">Nessuna entrata. Situazione coraggiosa, ma non ideale.</div>`;
+      return;
+    }
+    box.innerHTML = state.incomes.map((inc, idx) => `
+      <div class="item-card">
+        <div class="item-head">
+          <div>
+            <strong>${escapeHtml(inc.label || "Entrata")}</strong>
+            <div class="muted tiny">${escapeHtml(inc.type || "")}${inc.recurringMonthly ? " · ricorrente mensile" : " · una tantum"}</div>
+          </div>
+          <div class="inline-actions">
+            <button class="danger" data-del-income="${inc.id}">Elimina</button>
+          </div>
+        </div>
+        <div class="income-grid">
+
+          <div>
+            <label>Nome</label>
+            <input data-income="${inc.id}" data-field="label"
+              value="${escapeAttr(inc.label || "")}" />
+          </div>
+
+          <div>
+            <label>Tipo</label>
+            <select data-income="${inc.id}" data-field="type">
+              ${["stipendio","extra","prestito","altro"]
+                .map(t => `<option value="${t}" ${inc.type===t?"selected":""}>${capitalize(t)}</option>`)
+                .join("")}
+            </select>
+          </div>
+
+          <div>
+            <label>Importo (€)</label>
+            <input type="number" step="0.01"
+              data-income="${inc.id}" data-field="amount"
+              value="${Number(inc.amount || 0)}" />
+          </div>
+
+          <div>
+            <label>Mese</label>
+            <input type="month"
+              data-income="${inc.id}" data-field="month"
+              value="${inc.month}" />
+          </div>
+
+          <div>
+            <label>Ricorrente</label>
+            <select data-income="${inc.id}" data-field="recurringMonthly">
+              <option value="false" ${!inc.recurringMonthly?"selected":""}>No</option>
+              <option value="true" ${inc.recurringMonthly?"selected":""}>Sì</option>
+            </select>
+          </div>
+
+          <div class="full">
+            <label>Note</label>
+            <input data-income="${inc.id}" data-field="notes"
+              value="${escapeAttr(inc.notes || "")}" />
+          </div>
+
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function renderExpenseList(){
+    const box = qs("#expenseList");
+    if (!state.expenses.length){
+      box.innerHTML = `<div class="muted tiny">Nessuna spesa. Sarebbe bello, ma non ci credo.</div>`;
+      return;
+    }
+    box.innerHTML = state.expenses.map(exp => {
+		 const chk = exp.recurring
+		   ? { total: totalWithExtra(exp), scheduled: 0, delta: 0 }
+		   : expensePlannedVsScheduled(exp);
+
+      return `
+      <div class="item-card">
+        <div class="item-head">
+          <div>
+            <strong>${escapeHtml(exp.label || "Spesa")}</strong>
+            <div class="muted tiny">${escapeHtml(exp.category || "")} · totale con extra: ${fmt(chk.total)}</div>
+          </div>
+          <div class="inline-actions">
+            <span class="chip ${Math.abs(chk.delta) < 0.01 ? 'pill-pos' : 'pill-neg'}">
+              ${Math.abs(chk.delta) < 0.01 ? "Tranche allineate" : `Scostamento ${fmt(chk.delta)}`}
+            </span>
+		 ${exp.recurring ? '' : `
+		   <button class="btn" data-add-installment="${exp.id}">+ Tranche</button>
+		 `}            <button class="danger" data-del-expense="${exp.id}">Elimina</button>
+          </div>
+        </div>
+        <div class="expense-grid">
+          
+          <div>
+            <label>Nome</label>
+            <input data-expense="${exp.id}" data-field="label" value="${escapeAttr(exp.label || "")}" />
+          </div>
+
+          <div>
+            <label>Categoria</label>
+            <select data-expense="${exp.id}" data-field="category">
+              ${["Materiali","Impresa","Professionisti","Arredi","Altro"]
+                .map(t => `<option value="${t}" ${exp.category===t?"selected":""}>${t}</option>`)
+                .join("")}
+            </select>
+          </div>
+
+          <div>
+            <label>Base imponibile (€)</label>
+            <input type="number" step="0.01"
+              data-expense="${exp.id}" data-field="baseAmount"
+              value="${Number(exp.baseAmount || 0)}" />
+          </div>
+
+          <div>
+            <label>Extra %</label>
+            <input type="number" step="0.01"
+              data-expense="${exp.id}" data-field="extraPercent"
+              value="${Number(exp.extraPercent || 0)}" />
+          </div>
+
+          <div>
+            <label>Totale</label>
+            <input disabled value="${fmt(chk.total)}" />
+          </div>
+
+          <div class="full">
+            <label>Note</label>
+            <input data-expense="${exp.id}" data-field="notes"
+              value="${escapeAttr(exp.notes || "")}" />
+          </div>
+		  
+		  <div>
+		   <label>Ricorrente</label>
+		   <select data-expense="${exp.id}" data-field="recurring">
+			 <option value="false" ${!exp.recurring?"selected":""}>No</option>
+			 <option value="true" ${exp.recurring?"selected":""}>Sì</option>
+		   </select>
+		 </div>
+
+		 <div>
+		   <label>Da</label>
+		   <input type="month"
+			 data-expense="${exp.id}" data-field="recurringStart"
+			 value="${exp.recurringStart || ""}" />
+		 </div>
+
+		 <div>
+		   <label>A</label>
+		   <input type="month"
+			 data-expense="${exp.id}" data-field="recurringEnd"
+			 value="${exp.recurringEnd || ""}" />
+		 </div>
+
+        </div>
+		${exp.recurring ? '' : `
+
+        <div class="divider"></div>
+        <div class="section-title">
+          <div>
+            <h3>Tranche</h3>
+            <div class="muted tiny">Percentuale sul totale oppure importo fisso. Se metti “pagato”, usa il consuntivo.</div>
+          </div>
+        </div>
+
+        <div style="overflow:auto">
+          <table class="installments-table">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Valore</th>
+                <th>Mese</th>
+                <th>Pagato</th>
+                <th>Consuntivo (€)</th>
+                <th>Importo usato</th>
+                <th>Nota</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(exp.installments || []).map(inst => {
+                const planned = installmentPlannedAmount(exp, inst);
+                const used = inst.paid && Number(inst.actualAmount || 0) > 0 ? Number(inst.actualAmount || 0) : planned;
+                return `
+                <tr>
+                  <td>
+                    <select data-installment="${exp.id}|${inst.id}" data-field="mode">
+                      <option value="fixed" ${inst.mode==="fixed"?"selected":""}>Importo</option>
+                      <option value="percent" ${inst.mode==="percent"?"selected":""}>Percentuale</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input type="number" step="0.01" data-installment="${exp.id}|${inst.id}" data-field="value" value="${Number(inst.value || 0)}" />
+                  </td>
+                  <td>
+                    <input type="month" data-installment="${exp.id}|${inst.id}" data-field="month" value="${inst.month}" />
+                  </td>
+                  <td>
+                    <select data-installment="${exp.id}|${inst.id}" data-field="paid">
+                      <option value="false" ${!inst.paid?"selected":""}>No</option>
+                      <option value="true" ${inst.paid?"selected":""}>Sì</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input type="number" step="0.01" data-installment="${exp.id}|${inst.id}" data-field="actualAmount" value="${Number(inst.actualAmount || 0)}" />
+                  </td>
+                  <td><span class="mono">${fmt(used)}</span><br><small>previsto ${fmt(planned)}</small></td>
+                  <td><input data-installment="${exp.id}|${inst.id}" data-field="note" value="${escapeAttr(inst.note || "")}" /></td>
+                  <td>
+                    <button class="btn" data-dup-installment="${exp.id}|${inst.id}">Duplica</button>
+                  </td>
+                  <td>
+                    <button class="danger" data-del-installment="${exp.id}|${inst.id}">X</button>
+                  </td>
+                </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+		  
+        </div>
+		`}
+      </div>`;
+    }).join("");
+  }
+
+  
+
+  function render(){
+    syncSettingsToUI();
+    const data = compute();
+    renderStats(data);
+    renderTimeline(data);
+    renderIncomeList();
+    renderExpenseList();
+	drawChart(data);
+	drawExpenseChart(data);
+	bindDynamicEvents();
+	qs("#filterBadge").innerHTML = activeCategory
+		   ? `Filtro attivo: ${activeCategory}`
+		   : "";
+  }
+
+  function syncSettingsToUI(){
+    qs("#startMonth").value = state.plan.startMonth;
+    qs("#endMonth").value = state.plan.endMonth;
+    qs("#initialCash").value = state.plan.initialCash;
+  }
+
+  function addIncome(){
+    state.incomes.push({
+      id: uid(),
+      label: "Nuova entrata",
+      type: "extra",
+      amount: 0,
+      month: state.plan.startMonth,
+      recurringMonthly: false,
+      notes: ""
+    });
+    render();
+  }
+
+  function addExpense(){
+    state.expenses.push({
+      id: uid(),
+      label: "Nuova spesa",
+      category: "Materiali",
+      baseAmount: 0,
+      extraPercent: 0,
+      notes: "",
+      installments: [
+        { id: uid(), mode: "fixed", value: 0, month: state.plan.startMonth, paid: false, actualAmount: 0, note: "" }
+      ],
+	  // 👇 AGGIUNGI
+		   recurring: false,
+		   recurringStart: state.plan.startMonth,
+		   recurringEnd: ""
+    });
+    render();
+  }
+
+  function addInstallment(expenseId){
+    const exp = state.expenses.find(e => e.id === expenseId);
+    if (!exp) return;
+    exp.installments.push({ id: uid(), mode: "fixed", value: 0, month: state.plan.startMonth, paid: false, actualAmount: 0, note: "" });
+    render();
+  }
+
+  function exportJSON(){
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    const dt = new Date();
+    const name = `planner-cassa-${dt.getFullYear()}${String(dt.getMonth()+1).padStart(2,"0")}${String(dt.getDate()).padStart(2,"0")}.json`;
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+	function importJSON(file){
+		const reader = new FileReader();
+
+		reader.onload = () => {
+		try {
+		  const parsed = JSON.parse(reader.result);
+
+		  validateImportedState(parsed);
+		  sanitizeState(parsed); // 👈 AGGIUNGI QUESTO
+
+		  state.plan = parsed.plan;
+		  state.incomes = parsed.incomes || [];
+		  state.expenses = parsed.expenses || [];
+
+		  render();
+
+		} catch (e) {
+		  console.error(e); // 👈 fondamentale
+		  alert("Errore import: controlla console");
+		}
+	};
+
+	reader.readAsText(file);
+	}
+
+  function validateImportedState(data){
+    if (!data || typeof data !== "object") throw new Error("invalid");
+    if (!data.plan || !data.plan.startMonth || !data.plan.endMonth) throw new Error("invalid");
+    if (!Array.isArray(data.incomes) || !Array.isArray(data.expenses)) throw new Error("invalid");
+  }
+  
+  function sanitizeState(data) {
+
+	  // fallback base
+	  data.incomes = data.incomes || [];
+	  data.expenses = data.expenses || [];
+	  
+	  data.expenses.forEach(exp => {
+		   exp.recurring = !!exp.recurring;
+		   exp.recurringStart = exp.recurringStart || data.plan.startMonth;
+		   exp.recurringEnd = exp.recurringEnd || "";
+		 });
+
+	  data.expenses.forEach(exp => {
+		exp.installments = exp.installments || [];
+
+		exp.installments.forEach(inst => {
+
+		  // normalizza boolean
+		  inst.paid = !!inst.paid;
+
+		  // se paid ma senza actual → usa previsto
+		  if (inst.paid && (!inst.actualAmount || inst.actualAmount <= 0)) {
+			inst.actualAmount = inst.value || 0;
+		  }
+
+		  // se non pagato → reset
+		  if (!inst.paid) {
+			inst.actualAmount = 0;
+		  }
+
+		});
+	  });
+	}
+
+  function bindStaticEvents(){
+    qs("#loadSampleBtn").addEventListener("click", () => {
+      const d = sampleData();
+      state.plan = d.plan;
+      state.incomes = d.incomes;
+      state.expenses = d.expenses;
+      render();
+    });
+
+    qs("#exportJsonBtn").addEventListener("click", exportJSON);
+
+    qs("#importJsonInput").addEventListener("change", e => {
+      const file = e.target.files?.[0];
+      if (file) importJSON(file);
+      e.target.value = "";
+    });
+
+    qs("#addIncomeBtn").addEventListener("click", addIncome);
+    qs("#addExpenseBtn").addEventListener("click", addExpense);
+
+    qs("#startMonth").addEventListener("change", e => {
+      state.plan.startMonth = e.target.value;
+      if (state.plan.endMonth < state.plan.startMonth) state.plan.endMonth = state.plan.startMonth;
+      render();
+    });
+    qs("#endMonth").addEventListener("change", e => {
+      state.plan.endMonth = e.target.value;
+      if (state.plan.endMonth < state.plan.startMonth) state.plan.startMonth = state.plan.endMonth;
+      render();
+    });
+    qs("#initialCash").addEventListener("input", e => {
+      state.plan.initialCash = Number(e.target.value || 0);
+      render();
+    });
+
+    qsa(".tab").forEach(btn => {
+	  btn.addEventListener("click", () => {
+		qsa(".tab").forEach(x => x.classList.remove("active"));
+		qsa(".tab-panel").forEach(x => x.classList.add("hidden"));
+
+		btn.classList.add("active");
+		const tabId = btn.dataset.tab;
+		qs(`#${tabId}`).classList.remove("hidden");
+
+		// FIX: ridisegna grafico quando torni su dashboard
+		if (tabId === "dashboardTab") {
+		  setTimeout(() => {
+			const data = compute();
+			drawChart(data);
+		  }, 50); // lascia il tempo al DOM di rendere visibile il canvas
+		}
+	  });
+	});
+	
+	
+  }
+
+  function parseValueByField(field, value){
+    if (["amount","baseAmount","extraPercent","value","actualAmount","initialCash"].includes(field)) return Number(value || 0);
+    if (["recurringMonthly","paid","recurring"].includes(field)) return value === "true";
+	
+    return value;
+  }
+
+  function bindDynamicEvents(){
+
+    // DELETE
+    qsa("[data-del-income]").forEach(btn => btn.onclick = () => {
+      state.incomes = state.incomes.filter(x => x.id !== btn.dataset.delIncome);
+      render();
+    });
+
+    qsa("[data-del-expense]").forEach(btn => btn.onclick = () => {
+      state.expenses = state.expenses.filter(x => x.id !== btn.dataset.delExpense);
+      render();
+    });
+
+    qsa("[data-del-installment]").forEach(btn => btn.onclick = () => {
+      const [expenseId, instId] = btn.dataset.delInstallment.split("|");
+      const exp = state.expenses.find(x => x.id === expenseId);
+      if (!exp) return;
+      exp.installments = exp.installments.filter(x => x.id !== instId);
+      render();
+    });
+
+    // ADD INSTALLMENT
+    qsa("[data-add-installment]").forEach(btn => btn.onclick = () => addInstallment(btn.dataset.addInstallment));
+
+    // INPUTS (NO render su input)
+    qsa("[data-income]").forEach(el => {
+      el.oninput = () => {
+        const item = state.incomes.find(x => x.id === el.dataset.income);
+        if (!item) return;
+        item[el.dataset.field] = parseValueByField(el.dataset.field, el.value);
+      };
+      el.onchange = render;
+    });
+
+    qsa("[data-expense]").forEach(el => {
+      el.oninput = () => {
+        const item = state.expenses.find(x => x.id === el.dataset.expense);
+        if (!item) return;
+        item[el.dataset.field] = parseValueByField(el.dataset.field, el.value);
+      };
+      el.onchange = render;
+    });
+
+    qsa("[data-installment]").forEach(el => {
+      el.oninput = () => {
+        const [expenseId, instId] = el.dataset.installment.split("|");
+        const exp = state.expenses.find(x => x.id === expenseId);
+        if (!exp) return;
+        const inst = exp.installments.find(x => x.id === instId);
+        if (!inst) return;
+        inst[el.dataset.field] = parseValueByField(el.dataset.field, el.value);
+      };
+      el.onchange = render;
+    });
+    qsa("[data-dup-installment]").forEach(btn => btn.onclick = () => {
+      const [expenseId, instId] = btn.dataset.dupInstallment.split("|");
+      const exp = state.expenses.find(x => x.id === expenseId);
+      if (!exp) return;
+
+      const inst = exp.installments.find(x => x.id === instId);
+      if (!inst) return;
+
+      exp.installments.push({
+        ...JSON.parse(JSON.stringify(inst)),
+        id: uid()
+      });
+
+      render();
+    });
+    // toggle dettagli timeline
+    qsa("tr.clickable").forEach(row => {
+	  row.onclick = (e) => {
+		   if (e.target.closest(".bar")) return;
+
+		   const id = row.dataset.month;
+		   const el = qs(`#details-${id}`);
+
+		   el.classList.toggle("hidden");
+
+		   if (el.classList.contains("hidden")) {
+			 expandedMonths.delete(id);
+		   } else {
+			 expandedMonths.add(id);
+		   }
+
+		   const arrow = row.querySelector(".arrow");
+		   arrow.textContent = el.classList.contains("hidden") ? "▶" : "▼";
+		 };
+	});
+	
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[s]));
+  }
+  function escapeAttr(str){ return escapeHtml(str); }
+  function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  bindStaticEvents();
+  const d = sampleData();
+  state.plan = d.plan;
+  state.incomes = d.incomes;
+  state.expenses = d.expenses;
+  render();
+  window.addEventListener("resize", () => {
+	  const active = document.querySelector(".tab.active")?.dataset.tab;
+	  if (active === "dashboardTab") {
+		const data = compute();
+		drawChart(data);
+	  }
+	});
+    
+	
+	
+	function renderHeatmap(data){
+		   const box = qs("#heatmap");
+
+		   box.innerHTML = data.timeline.map(t => {
+			 const cls =
+			   t.net > 0 ? "pos" :
+			   t.net < 0 ? "neg" :
+			   "mid";
+
+			 return `
+			   <div class="heat ${cls}">
+				 ${labelMonth(t.month)}
+				 <strong>${t.net > 0 ? "+" : ""}${fmt(t.net)}</strong>
+			   </div>
+			 `;
+		   }).join("");
+		   
+		   
+		 }
+		 
+		 function drawExpenseChart(data){
+
+		   const canvas = qs("#expenseChart");
+		   const legend = qs("#expenseLegend");
+
+		   const dpr = window.devicePixelRatio || 1;
+		   const size = 260;
+
+		   canvas.width = size * dpr;
+		   canvas.height = size * dpr;
+		   canvas.style.width = size + "px";
+		   canvas.style.height = size + "px";
+
+		   const ctx = canvas.getContext("2d");
+		   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+		   const map = {};
+
+		   data.timeline.forEach(t => {
+			 t.rowsOut.forEach(r => {
+				  if (activeCategory && r.category !== activeCategory) return;
+			   map[r.category] = (map[r.category] || 0) + r.amount;
+			 });
+		   });
+
+		   const entries = Object.entries(map)
+			 .sort((a,b) => b[1] - a[1])
+			 .slice(0,5);
+
+		   const total = entries.reduce((s, [,v]) => s + v, 0);
+
+		   if (!entries.length || total === 0){
+			 ctx.clearRect(0,0,canvas.width,canvas.height);
+			 legend.innerHTML = `<div class="muted tiny">Nessuna spesa</div>`;
+			 return;
+		   }
+
+		   const colors = [
+			 "#6ea8fe",
+			 "#77e0c6",
+			 "#ffb86b",
+			 "#ff6b7a",
+			 "#c792ea"
+		   ];
+
+		   let start = -Math.PI / 2;
+
+		   entries.forEach(([name, val], i) => {
+			 const slice = (val / total) * Math.PI * 2;
+
+			 ctx.beginPath();
+			 ctx.moveTo(size/2, size/2);
+			 ctx.arc(size/2, size/2, 100, start, start + slice);
+			 ctx.closePath();
+
+			 ctx.fillStyle = colors[i];
+			 ctx.fill();
+
+			 start += slice;
+		   });
+
+		   // buco centrale (donut)
+		   ctx.beginPath();
+		   ctx.arc(size/2, size/2, 60, 0, Math.PI * 2);
+		   ctx.fillStyle = "#0b1020";
+		   ctx.fill();
+
+		   // testo centro
+		   ctx.fillStyle = "#fff";
+		   ctx.font = "bold 14px sans-serif";
+		   ctx.textAlign = "center";
+		   ctx.fillText("Spese", size/2, size/2 - 5);
+		   ctx.fillText(fmt(total), size/2, size/2 + 15);
+
+		   legend.innerHTML = entries.map(([name, val], i) => {
+		   const perc = Math.round((val / total) * 100);
+
+		   return `
+			 <div class="bar ${activeCategory === name ? 'active-bar' : ''}" data-cat="${name}">
+			   <div class="bar-top">
+				 <span>${name}</span>
+				 <span>${perc}% · ${fmt(val)}</span>
+			   </div>
+			   <div class="bar-track">
+				 <div class="bar-fill" 
+					  style="width:${perc}%; background:${colors[i]}">
+				 </div>
+			   </div>
+			 </div>
+		   `;
+		 }).join("");
+		 qsa(".bar").forEach(el => {
+		   el.onclick = () => {
+			 const cat = el.dataset.cat;
+			 activeCategory = (activeCategory === cat) ? null : cat;
+			 render();
+		   };
+		 });
+		 }
+})();
+
+</script>
+</body>
+</html>

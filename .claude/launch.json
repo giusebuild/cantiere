@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "finanze",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8773", "--directory", "D:/claudeworks/varie/finanze-lavori"],
+      "port": 8773
+    }
+  ]
+}

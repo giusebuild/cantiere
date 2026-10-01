@@ -1,0 +1,223 @@
+{
+  "plan": {
+    "startMonth": "2026-04",
+    "endMonth": "2026-10",
+    "initialCash": 25000
+  },
+  "incomes": [
+    {
+      "id": "qhm2wc2d",
+      "label": "Stipendio",
+      "type": "stipendio",
+      "amount": 2200,
+      "month": "2026-05",
+      "recurringMonthly": true,
+      "notes": "Accredito intorno al 15"
+    },
+    {
+      "id": "h3jpsdel",
+      "label": "Prestito",
+      "type": "prestito",
+      "amount": 11000,
+      "month": "2026-07",
+      "recurringMonthly": false,
+      "notes": "Liquidità extra"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "xrg2dxcr",
+      "label": "Impresa",
+      "category": "Impresa",
+      "baseAmount": 25000,
+      "extraPercent": 10,
+      "notes": "Acconto, SAL, saldo",
+      "recurring": false,
+      "installments": [
+        {
+          "id": "h9uev0j3",
+          "mode": "percent",
+          "value": 30,
+          "month": "2026-06",
+          "paid": false,
+          "actualAmount": 0,
+          "note": "Acconto 30%"
+        },
+        {
+          "id": "wj1fyxwq",
+          "mode": "percent",
+          "value": 40,
+          "month": "2026-07",
+          "paid": false,
+          "actualAmount": 0,
+          "note": "SAL 40%"
+        },
+        {
+          "id": "w58h073q",
+          "mode": "percent",
+          "value": 30,
+          "month": "2026-09",
+          "paid": false,
+          "actualAmount": 0,
+          "note": "Saldo 30%"
+        }
+      ]
+    },
+    {
+      "id": "2ig0zpnb",
+      "label": "Architetto",
+      "category": "Professionisti",
+      "baseAmount": 6000,
+      "extraPercent": 4,
+      "notes": "Distribuzione per fasi",
+      "recurring": false,
+      "installments": [
+        {
+          "id": "c1tvo56o",
+          "mode": "fixed",
+          "value": 2080,
+          "month": "2026-05",
+          "paid": false,
+          "actualAmount": 0,
+          "note": "Incarico"
+        },
+        {
+          "id": "2qavj0vp",
+          "mode": "fixed",
+          "value": 1560,
+          "month": "2026-05",
+          "paid": false,
+          "actualAmount": 0,
+          "note": "Preliminare"
+        },
+        {
+          "id": "9c1tik7h",
+          "mode": "fixed",
+          "value": 1560,
+          "month": "2026-07",
+          "paid": false,
+          "actualAmount": 0,
+          "note": "Avvio lavori"
+        },
+        {
+          "id": "de1o0osb",
+          "mode": "fixed",
+          "value": 1040,
+          "month": "2026-09",
+          "paid": false,
+          "actualAmount": 0,
+          "note": "Chiusura"
+        }
+      ]
+    },
+    {
+      "id": "lfh8kv3e",
+      "label": "Materiali bagno",
+      "category": "Materiali",
+      "baseAmount": 2695,
+      "extraPercent": 0,
+      "notes": "Doccia, sanitari, mobile bagno",
+      "recurring": false,
+      "installments": [
+        {
+          "id": "7p0xqu7a",
+          "mode": "fixed",
+          "value": 1200,
+          "month": "2026-06",
+          "paid": false,
+          "actualAmount": 0,
+          "note": "Prima fornitura"
+        },
+        {
+          "id": "22ocqzrr",
+          "mode": "fixed",
+          "value": 1495,
+          "month": "2026-06",
+          "paid": false,
+          "actualAmount": 0,
+          "note": "Seconda fornitura"
+        }
+      ]
+    },
+    {
+      "id": "xa1ucfin",
+      "label": "Materiali pavimento",
+      "category": "Materiali",
+      "baseAmount": 1275,
+      "extraPercent": 0,
+      "notes": "",
+      "recurring": false,
+      "installments": [
+        {
+          "id": "w94cep2l",
+          "mode": "fixed",
+          "value": 1275,
+          "month": "2026-06",
+          "paid": true,
+          "actualAmount": 1275,
+          "note": "Pavimento"
+        }
+      ]
+    },
+    {
+      "id": "kotekdls",
+      "label": "Cucina",
+      "category": "Arredi",
+      "baseAmount": 4000,
+      "extraPercent": 0,
+      "notes": "Trasporto + saldo",
+      "recurring": false,
+      "installments": [
+        {
+          "id": "ze32ew1h",
+          "mode": "fixed",
+          "value": 500,
+          "month": "2026-08",
+          "paid": false,
+          "actualAmount": 0,
+          "note": "Trasporto"
+        },
+        {
+          "id": "8tmem15i",
+          "mode": "fixed",
+          "value": 3500,
+          "month": "2026-08",
+          "paid": false,
+          "actualAmount": 0,
+          "note": "Saldo"
+        }
+      ]
+    },
+    {
+      "id": "kmsfsj7w",
+      "label": "Mutuo",
+      "category": "Altro",
+      "baseAmount": 650,
+      "extraPercent": 0,
+      "notes": "Rata mensile mutuo",
+      "recurring": true,
+      "recurringStart": "2026-05",
+      "recurringEnd": "2026-10"
+    },
+    {
+      "id": "eljv03cu",
+      "label": "Viaggio",
+      "category": "Altro",
+      "baseAmount": 1000,
+      "extraPercent": 0,
+      "notes": "Weekend lungo",
+      "recurring": false,
+      "installments": [
+        {
+          "id": "q220tzfa",
+          "mode": "fixed",
+          "value": 1000,
+          "month": "2026-04",
+          "paid": false,
+          "actualAmount": 0,
+          "note": "Pagamento unico"
+        }
+      ]
+    }
+  ]
+}
