@@ -857,9 +857,9 @@ async function pullCloud(silent) {
   } catch (e) { setStatus('offline'); if (e.auth && !silent) toast(e.message); }
 }
 function linkFormHTML(btnLabel) {
-  return `<form data-linkform autocomplete="on">
-    <div class="field"><label>Repo (nome/repo)</label><input name="username" autocomplete="username" placeholder="nome/repo" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
-    <div class="field"><label>Token</label><input name="password" type="password" autocomplete="current-password" placeholder="github_pat_…" autocapitalize="none"></div>
+  return `<form data-linkform method="post" action="#" autocomplete="on">
+    <div class="field"><label for="lk-user">Repo (nome/repo)</label><input id="lk-user" name="username" type="text" autocomplete="username" placeholder="nome/repo" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
+    <div class="field"><label for="lk-pass">Token</label><input id="lk-pass" name="password" type="password" autocomplete="current-password" placeholder="github_pat_…" autocapitalize="none"></div>
     <div class="err" data-err></div>
     <button class="btn primary" type="submit" data-link-btn style="width:100%">${btnLabel}</button>
   </form>`;
@@ -884,11 +884,22 @@ async function ghLinkAction(form) {
     if (rs) { gh.sha = remote.sha; ghSave(); state = rs; lastPulled = state.updatedAt; saveLocal(); toast('Collegato'); }
     else { gh.sha = remote?.sha || null; await ghPut(state); lastPulled = state.updatedAt; toast('Collegato'); }
     if (!j.private) setTimeout(() => toast('Occhio: il repo è pubblico'), 2800);
+    storeCredential(repo, token);
     setStatus('saved'); closeSheet(); $('#gate').classList.add('hidden'); render();
   } catch (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = label; }
 }
+function storeCredential(repo, token) { try { if (navigator.credentials && window.PasswordCredential) navigator.credentials.store(new PasswordCredential({ id: repo, password: token, name: 'Cantiere' })); } catch { } }
+async function autoSignIn() {
+  if (!(navigator.credentials && window.PasswordCredential)) return false;
+  try {
+    const c = await navigator.credentials.get({ password: true, mediation: 'optional' });
+    if (c && c.type === 'password' && c.id && c.password) { const f = $('#gateForm form'); if (f) { f.querySelector('[name="username"]').value = c.id; f.querySelector('[name="password"]').value = c.password; await ghLinkAction(f); return !!gh; } }
+  } catch { }
+  return false;
+}
 async function logout() {
   if (pendingSave) { clearTimeout(saveTimer); await pushCloud(); }
+  try { if (navigator.credentials && navigator.credentials.preventSilentAccess) await navigator.credentials.preventSilentAccess(); } catch { }
   gh = null; ghSave(); try { localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_OLD); localStorage.removeItem(MODE_KEY); } catch { }
   state = blankState(); imposta.confirmLogout = false; contractView = null; expandedMonth = null; setPresent(false);
   if (!$('#gateForm form')) $('#gateForm').innerHTML += linkFormHTML('Entra') + `<button class="btn ghost" type="button" data-act="localOnly" style="width:100%;margin-top:8px">Solo su questo dispositivo</button>`;
@@ -1104,7 +1115,7 @@ const local = loadLocal();
 state = local || blankState(); render();
 if (gh) { setStatus('saving'); pullCloud(true); }
 else if (mode === 'local' || local) setStatus('local');
-else { $('#gateForm').innerHTML += linkFormHTML('Entra') + `<button class="btn ghost" type="button" data-act="localOnly" style="width:100%;margin-top:8px">Solo su questo dispositivo</button>`; $('#gate').classList.remove('hidden'); }
+else { $('#gateForm').innerHTML += linkFormHTML('Entra') + `<button class="btn ghost" type="button" data-act="localOnly" style="width:100%;margin-top:8px">Solo su questo dispositivo</button>`; $('#gate').classList.remove('hidden'); autoSignIn(); }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && gh && !pendingSave) pullCloud(false); });
 window.addEventListener('online', () => { if (gh && pendingSave) pushCloud(); });
 })();

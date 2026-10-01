@@ -39,7 +39,7 @@ L'app è una pagina statica: nessun server, nessun account, niente che passi da 
 
 1. Crea un repo privato vuoto, con un README così ha già il branch `main`. Il nome lo scegli tu.
 2. GitHub → Settings → Developer settings → Personal access tokens → *Fine-grained tokens*. Repository access: *Only select repositories* → quel repo. Permissions → *Contents: Read and write*. Scadenza fino a un anno.
-3. Apri l'app, scrivi il repo come `nome/repo`, incolla il token, *Entra*. Il browser chiede di salvarlo come una password: dì di sì. Sul telefono: *Aggiungi a Home*. *Esci* toglie token e dati dal dispositivo: i dati restano nel repo.
+3. Apri l'app, scrivi il repo come `nome/repo`, incolla il token, *Entra*. Il browser chiede di salvarlo come una password: dì di sì. Le volte dopo, su Android e Chrome entra da solo; su iPhone tocchi la chiave sopra la tastiera. Sul telefono: *Aggiungi a Home*. *Esci* toglie token e dati dal dispositivo: i dati restano nel repo.
 
 Quando il token scade l'app segna *Offline* e lo dice: ne generi un altro, Imposta → Esci, rientri. Nel frattempo i dati restano sul dispositivo.
 
