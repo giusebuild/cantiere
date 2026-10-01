@@ -1,4 +1,4 @@
-# Cantiere
+# Conto Cantiere
 
 I soldi di una ristrutturazione, mese per mese. Un'app in un solo file, per PC e telefono.
 
@@ -10,13 +10,13 @@ Appena entri sai se i lavori sono coperti. Segni quello che paghi, e il resto si
 
 **Oggi.** Il verdetto: *Lavori coperti*, *Coperti ma stretti*, o *Scoperti da febbraio: mancano 8.500 €*. Sotto, quanto costano i lavori, quanto hai pagato, quanto resta. Poi quanto hai da parte e come cambia mese per mese. In fondo, i pagamenti da segnare: **Fatto** li segna con l'importo previsto e la data di oggi, la matita per cambiarli.
 
-**Il +.** Per quello che non era previsto: ho pagato o ho incassato, quanto, per cosa, quando. Se scegli un contratto che ha pagamenti in attesa, te li propone.
+**Segna, il + in basso.** Per quello che non era previsto: ho pagato o ho incassato, quanto, per cosa, quando. Se scegli un contratto che ha pagamenti in attesa, te li propone.
 
-**Cantiere.** *Mesi*: il grafico di quanto hai da parte a fine mese, con la fascia dei lavori, dal primo all'ultimo pagamento dei contratti. Sotto, un mese alla volta con le frecce. *Contratti*: una scheda per ognuno, impresa, architetto, ogni fornitore, con totale, pagato, resta, prossimo pagamento. **Mostra** nasconde tutto il resto: resta solo quella scheda, da far vedere a chi di dovere.
+**Cantiere.** *Mesi*: il grafico di quanto hai da parte a fine mese, con la fascia dei lavori, dal primo all'ultimo pagamento dei contratti. Sotto, un mese alla volta con le frecce. *Contratti*: la torta di come si dividono i soldi, poi una scheda per ognuno, impresa, architetto, ogni fornitore, con totale, pagato, resta, prossimo pagamento. **Mostra** nasconde tutto il resto: resta solo quella scheda, da far vedere a chi di dovere.
 
 **Correggere.** Dopo *Fatto* c'è *Annulla*. Più tardi tocchi la riga, in un mese o nella scheda del contratto: cambi importo e data, oppure *Non l'ho pagato*.
 
-**Imposta.** Da parte oggi, quanto metti al mese, sotto quanto non vuoi scendere, inizio dei lavori. Il prestito: quanto ti serve e la rata. Backup, collegamento, Esci.
+**Imposta.** Da parte oggi, quanto metti al mese, sotto quanto non vuoi scendere. Il prestito: quanto ti serve e la rata. Backup, collegamento, Esci.
 
 ## Come ragiona
 
@@ -24,7 +24,7 @@ Appena entri sai se i lavori sono coperti. Segni quello che paghi, e il resto si
 - Un pagamento segnato con data precedente all'ultimo *Aggiorna* non tocca il da parte: era già contato. Uno con data successiva lo abbassa. Quindi: prima segni, poi aggiorni.
 - Un pagamento segnato è reale: ha data e importo veri e sparisce dal futuro. Il previsto resta accanto, così vedi se stai sforando.
 - Un pagamento previsto con mese passato e non segnato è **in ritardo**: conta nel mese corrente finché non lo segni o lo sposti.
-- I pagamenti "rispetto ai lavori" (inizio lavori, inizio +3) si spostano da soli se cambi il mese di inizio.
+- Se le date slittano, nel contratto c'è *Sposta i non pagati*: i pagamenti ancora da fare avanti o indietro di un mese.
 - **Verdetto**: verde se non scendi mai sotto il minimo che hai scelto, giallo se ci scendi ma resti sopra zero, rosso se vai sotto zero. Le barre hanno gli stessi colori. Il prestito consigliato è il più piccolo, a scatti di 500, che ti tiene sopra quel minimo, rate comprese.
 - **Rata**: ammortamento alla francese col solo TAN. Una stima, non un preventivo.
 

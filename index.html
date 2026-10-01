@@ -7,8 +7,8 @@
 <meta name="theme-color" content="#121412" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Finanze">
-<title>Finanze lavori</title>
+<meta name="apple-mobile-web-app-title" content="Conto Cantiere">
+<title>Conto Cantiere</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -76,12 +76,16 @@ h3{font-size:14px;color:var(--ink-2);font-weight:700}
 .tabs button{flex:1;border:0;background:none;font-weight:700;font-size:11px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:9px}
 .tabs button.on{color:var(--accent-ink)}
 .tabs svg{width:22px;height:22px}
+.tabs .tab-plus{color:var(--ink)}
+.tabs .tab-plus svg{width:30px;height:30px;padding:6px;border-radius:50%;background:var(--accent);color:#fff;margin-top:-4px}
 @media (min-width:900px){
   body{padding-bottom:48px}
   .tabs{position:static;height:auto;padding:0;border:0;background:none;backdrop-filter:none;gap:2px;margin-left:8px}
   .tabs button{flex:0 0 auto;flex-direction:row;gap:8px;font-size:14px;padding:8px 14px;border-radius:999px}
   .tabs button.on{background:var(--accent-soft)}
   .tabs svg{width:18px;height:18px}
+  .tabs .tab-plus{background:var(--accent);color:#fff;margin-left:6px}
+  .tabs .tab-plus svg{width:18px;height:18px;padding:0;margin:0;background:none}
 }
 
 /* fab */
@@ -156,6 +160,19 @@ h3{font-size:14px;color:var(--ink-2);font-weight:700}
 .open > .row .chev,.open > .row.tap .chev{transform:rotate(90deg)}
 .bar{height:6px;border-radius:999px;background:var(--line-2);overflow:hidden;margin-top:6px}
 .bar i{display:block;height:100%;border-radius:999px}
+
+/* months list */
+.mrow2{display:grid;grid-template-columns:84px 1fr 90px;align-items:center;gap:10px;padding:11px 0;border:0;background:none;width:100%;text-align:left;border-bottom:1px solid var(--line-2);font:inherit;color:inherit;cursor:pointer}
+.mrow2 .ml{font-weight:800;font-size:14px;line-height:1.15}
+.mrow2 .ml small{color:var(--muted);font-weight:600;margin-left:3px}
+.mrow2 .ml em{display:block;font-style:normal;font-size:10px;color:var(--accent-ink);font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.mrow2 .mb{height:14px;border-radius:999px;background:var(--line-2);overflow:hidden;display:block}
+.mrow2 .mb i{display:block;height:100%;border-radius:999px;min-width:3px}
+.mrow2 .ma{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap}
+.mrow2 .ma.neg{color:var(--neg)}.mrow2 .ma.warn{color:var(--warn)}.mrow2 .ma.past{color:var(--muted);font-weight:700}
+.month.open .mrow2{background:var(--surface-2);border-radius:12px;padding:11px 10px;margin:0 -10px;border-bottom:0}
+.month.open .mbody{padding:6px 0 12px;border-bottom:1px solid var(--line-2)}
+.month:last-child .mrow2,.month:last-child .mbody{border-bottom:0}
 
 /* months */
 .mrow{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line-2);border-left:0;border-right:0;border-top:0;background:none;width:100%;text-align:left}
@@ -238,6 +255,18 @@ details summary{list-style:none}
 details summary::before{content:"› ";font-weight:800}
 details[open] summary::before{content:"⌄ "}
 
+/* donut */
+.donut-wrap{display:flex;gap:18px;align-items:center}
+.donut-wrap svg{width:150px;height:150px;flex:0 0 auto}
+.donut-wrap text{font-family:inherit}
+.dl{flex:1;min-width:0}
+.dl button{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;padding:7px 0;font:inherit;color:inherit;text-align:left;border-bottom:1px solid var(--line-2);cursor:pointer}
+.dl button:last-child{border-bottom:0}
+.dl .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;font-size:13px}
+.dl .p{color:var(--muted);font-size:12px;font-weight:700;width:36px;text-align:right}
+.dl .a{font-weight:800;font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap}
+@media (max-width:430px){.donut-wrap{flex-direction:column;align-items:stretch}.donut-wrap svg{margin:0 auto}}
+
 /* contract page */
 .cpage .head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .cpage h1{font-size:24px;letter-spacing:-.02em}
@@ -300,11 +329,12 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 <body>
 <div id="app">
   <header class="top">
-    <div class="brand"><span class="logo"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="8" width="3" height="6" rx="1" fill="#fff"/><rect x="6.5" y="4" width="3" height="10" rx="1" fill="#fff"/><rect x="11" y="6" width="3" height="8" rx="1" fill="#fff"/></svg></span>Finanze lavori</div>
+    <div class="brand"><span class="logo"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="8" width="3" height="6" rx="1" fill="#fff"/><rect x="6.5" y="4" width="3" height="10" rx="1" fill="#fff"/><rect x="11" y="6" width="3" height="8" rx="1" fill="#fff"/></svg></span>Conto Cantiere</div>
     <nav class="tabs" id="tabs">
       <button data-tab="oggi" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Oggi</button>
       <button data-tab="cantiere"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V8l7-4 7 4v13"/><path d="M9 21v-6h6v6"/></svg>Cantiere</button>
       <button data-tab="imposta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="var(--surface)"/><circle cx="15" cy="12" r="2" fill="var(--surface)"/><circle cx="8" cy="18" r="2" fill="var(--surface)"/></svg>Imposta</button>
+      <button class="tab-plus" data-act="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Segna</button>
     </nav>
     <span class="sync local" id="sync"><i></i><b>Solo qui</b></span>
   </header>
@@ -313,12 +343,11 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
     <section id="view-cantiere" class="view cantiere hidden"></section>
     <section id="view-imposta" class="view imposta hidden"></section>
   </main>
-  <button class="fab" data-act="plus" aria-label="Segna un pagamento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
 </div>
 <dialog class="sheet" id="sheet"><div class="sheet-body" id="sheetBody"></div></dialog>
 <div id="gate" class="gate hidden">
   <div class="card" id="gateForm">
-    <div class="brand" style="margin-bottom:10px"><span class="logo"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="8" width="3" height="6" rx="1" fill="#fff"/><rect x="6.5" y="4" width="3" height="10" rx="1" fill="#fff"/><rect x="11" y="6" width="3" height="8" rx="1" fill="#fff"/></svg></span>Finanze lavori</div>
+    <div class="brand" style="margin-bottom:10px"><span class="logo"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="8" width="3" height="6" rx="1" fill="#fff"/><rect x="6.5" y="4" width="3" height="10" rx="1" fill="#fff"/><rect x="11" y="6" width="3" height="8" rx="1" fill="#fff"/></svg></span>Conto Cantiere</div>
     <p class="gate-sub">I tuoi dati stanno in un repo GitHub privato.</p>
   </div>
 </div>
@@ -328,7 +357,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 (() => {
 'use strict';
 /* ===== utils ===== */
-const BUILD = '1 ott 2026, 12:10';
+const BUILD = '1 ott 2026, 12:17';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -396,13 +425,14 @@ function normalize(st) {
       actual: p.actual && typeof p.actual === 'object' ? { amount: num(p.actual.amount), date: isDate(p.actual.date) ? p.actual.date : todayISO(), at: /^\d{4}-\d{2}-\d{2}T/.test(p.actual.at || '') ? p.actual.at : (isDate(p.actual.date) ? p.actual.date + 'T12:00:00.000Z' : nowISO()) } : null,
     })).filter(p => p.planned || p.actual),
   }));
+  for (const c of st.contracts) for (const p of c.payments) if (p.planned && p.planned.offset != null) { p.planned.month = addMonths(s.startMonth, p.planned.offset); p.planned.offset = null; }
   st.extras = (Array.isArray(st.extras) ? st.extras : []).map(e => ({ id: e.id || uid(), label: String(e.label || 'Entrata'), amount: num(e.amount), date: isDate(e.date) ? e.date : todayISO(), at: /^\d{4}-\d{2}-\d{2}T/.test(e.at || '') ? e.at : nowISO() }));
   const worksEnd = addMonths(worksLast(st), 1); m.endMonth = worksEnd > addMonths(cur, 6) ? worksEnd : addMonths(cur, 6);
   st.updatedAt = st.updatedAt || nowISO();
   return st;
 }
 const planMonth = (st, p) => p.planned.offset != null ? addMonths(st.site.startMonth, p.planned.offset) : p.planned.month;
-function worksSpan(st) { let a = st.site.startMonth, b = st.site.startMonth; for (const c of st.contracts) for (const p of c.payments) { const m = p.actual ? p.actual.date.slice(0, 7) : (p.planned ? planMonth(st, p) : null); if (!m) continue; if (m < a) a = m; if (m > b) b = m; } return [a, b]; }
+function worksSpan(st) { let a = curMonth(), b = curMonth(); let any = false; for (const c of st.contracts) for (const p of c.payments) { const m = p.actual ? p.actual.date.slice(0, 7) : (p.planned ? planMonth(st, p) : null); if (!m) continue; if (!any || m < a) a = m; if (!any || m > b) b = m; any = true; } return [a, b]; }
 const worksFirst = st => worksSpan(st)[0];
 const worksLast = st => worksSpan(st)[1];
 function offLabel(k) { return k === 0 ? 'Inizio lavori' : `Inizio +${k}`; }
@@ -512,7 +542,7 @@ function project(st, loanOv) {
   return { months, rows, minRow, endRow: rows[rows.length - 1], cur, end, beyond, pend, start: availableNow(st) };
 }
 function pastRows(st, p) {
-  const cur = p.cur; let first = st.site.startMonth;
+  const cur = p.cur; let first = cur;
   for (const c of st.contracts) for (const pay of c.payments) { if (pay.actual && pay.actual.date.slice(0, 7) < first) first = pay.actual.date.slice(0, 7); if (pay.planned && planMonth(st, pay) < first) first = planMonth(st, pay); }
   for (const e of st.extras) if (e.date.slice(0, 7) < first) first = e.date.slice(0, 7);
   const floor = addMonths(cur, -12); if (first < floor) first = floor;
@@ -630,7 +660,7 @@ function drawStrip(p) {
   const i0 = p.months.findIndex(mm => mm >= ws), i1 = p.months.reduce((a, mm, i) => mm <= we ? i : a, -1);
   if (i0 >= 0 && i1 >= i0) band = `<rect x="${slot * i0}" y="4" width="${slot * (i1 - i0 + 1)}" height="${H - padB - 4}" rx="6" fill="var(--line-2)"/><text x="${slot * i0 + 6}" y="${14}" style="fill:var(--muted)">lavori</text>`;
   const minI = vals.indexOf(Math.min(...vals));
-  const labels = rows.map((r, i) => { const t = i === 0 ? 'ora' : r.month === st.site.startMonth ? 'inizio' : r.month === we ? 'fine' : i === n - 1 ? MONTHS[Number(r.month.slice(5)) - 1] : ''; return t ? `<text x="${x(i) + bw / 2}" y="${H - 4}" text-anchor="middle">${t}</text>` : ''; }).join('');
+  const labels = rows.map((r, i) => { const t = i === 0 ? 'ora' : r.month === ws ? 'inizio' : r.month === we ? 'fine' : i === n - 1 ? MONTHS[Number(r.month.slice(5)) - 1] : ''; return t ? `<text x="${x(i) + bw / 2}" y="${H - 4}" text-anchor="middle">${t}</text>` : ''; }).join('');
   const minLabel = `<text x="${Math.min(W - 34, Math.max(34, x(minI) + bw / 2))}" y="${rows[minI].bal >= 0 ? y(rows[minI].bal) - 5 : y(0) - 5}" text-anchor="middle" class="sel">${fmt(rows[minI].bal)}</text>`;
   box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${band}
     <line x1="0" x2="${W}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line)"/>
@@ -648,15 +678,26 @@ function renderCantiere() {
   if (contractView) { const c = state.contracts.find(x => x.id === contractView); if (c) { el.innerHTML = contractPageHTML(c); return; } contractView = null; }
   el.innerHTML = `<div class="seg not-present"><button class="${cantView === 'mesi' ? 'on' : ''}" data-act="cantView" data-v="mesi">Mesi</button><button class="${cantView === 'contratti' ? 'on' : ''}" data-act="cantView" data-v="contratti">Contratti</button></div>
     ${cantView === 'mesi' ? mesiHTML() : contrattiHTML()}`;
-  if (cantView === 'mesi') drawChart(navRows.filter(r => !r.past));
 }
 let navMonths = [], navRows = [];
 function mesiHTML() {
   const st = state; const p = project(st); const past = pastRows(st, p); navRows = [...past, ...p.rows]; navMonths = navRows.map(x => x.month);
   if (!expandedMonth || !navMonths.includes(expandedMonth)) expandedMonth = p.cur;
-  const cushion = st.money.cushion; const wl = worksLast(st); const i = navMonths.indexOf(expandedMonth); const r = navRows[i];
-  const tag = m => m === p.cur ? 'adesso' : m === st.site.startMonth ? 'inizio lavori' : m === wl ? 'fine lavori' : '';
-  const isCur = r.month === p.cur;
+  const cushion = st.money.cushion; const [wf, wl] = worksSpan(st);
+  const maxAbs = Math.max(1, ...p.rows.map(r => Math.abs(r.bal)), ...past.map(r => r.out));
+  const list = navRows.map((r, i) => {
+    const open = r.month === expandedMonth; const [yy, mo] = r.month.split('-').map(Number);
+    const tag = r.month === p.cur ? 'ora' : r.month === wf ? 'inizio' : r.month === wl ? 'fine' : '';
+    const val = r.past ? r.out : r.bal; const w = Math.max(r.past && !r.out ? 0 : 2, Math.round(Math.abs(val) / maxAbs * 100));
+    const color = r.past ? 'var(--muted)' : balColor(r.bal, cushion); const cls = r.past ? 'past' : balCls(r.bal, cushion);
+    const amt = r.past ? (r.out ? `−${fmt(r.out)}` : '') : fmt(r.bal);
+    const row = `<button class="mrow2" data-act="month" data-v="${r.month}"><span class="ml">${MONTHS[mo - 1]}<small>${String(yy).slice(2)}</small>${tag ? `<em>${tag}</em>` : ''}</span><span class="mb"><i style="width:${w}%;background:${color};opacity:${r.past ? .5 : 1}"></i></span><span class="ma ${cls}">${amt}</span></button>`;
+    return `<div class="month ${open ? 'open' : ''}">${row}${open ? monthBodyHTML(st, p, r, i) : ''}</div>`;
+  }).join('');
+  return `<div class="card"><div class="card-head"><h2>Da parte a fine mese</h2><span class="chip">lavori ${labelM(wf)} – ${labelM(wl)}</span></div>${list}</div>`;
+}
+function monthBodyHTML(st, p, r, i) {
+  const cushion = st.money.cushion; const isCur = r.month === p.cur;
   const flow = r.past ? ((r.out || r.inc) ? `<div class="mflow"><span>Pagato <b>−${fmt(r.out)}</b></span>${r.inc ? `<span>incassato <b class="in">+${fmt(r.inc)}</b></span>` : ''}</div>` : '')
     : isCur ? `<div class="mflow"><span>Da parte oggi <b>${fmt(p.start)}</b></span><span>da pagare <b>−${fmt(r.out)}</b></span>${r.inc ? `<span>in arrivo <b class="in">+${fmt(r.inc)}</b></span>` : ''}<span>fine mese <b class="${balCls(r.bal, cushion)}">${fmt(r.bal)}</b></span></div>`
     : `<div class="mflow"><span>Parti con <b>${fmt(navRows[i - 1].bal)}</b></span><span>entra <b class="in">+${fmt(r.inc)}</b></span><span>esce <b>−${fmt(r.out)}</b></span><span>fine mese <b class="${balCls(r.bal, cushion)}">${fmt(r.bal)}</b></span></div>`;
@@ -666,14 +707,10 @@ function mesiHTML() {
       <div class="due-r"><span class="amt ${x.kind}">${x.kind === 'in' ? '+' : '−'}${fmt(x.amount)}</span>${x.p ? `<button class="btn sm primary" data-act="fatto" data-v="${x.p.id}">Fatto</button><button class="icon-btn" data-act="segna" data-v="${x.p.id}" aria-label="Cambia importo o data">${I.pencil}</button>` : ''}</div>
     </div>`).join('');
   const done = doneInMonthHTML(st, r.month);
-  return `<div class="card"><div class="card-head"><h2>Da parte a fine mese</h2><span class="chip">lavori ${labelM(worksFirst(st))} – ${labelM(wl)}</span></div><div class="chart-wrap" id="chart"></div></div>
-    <div class="card">
-      <div class="mnav"><button class="icon-btn" data-act="monthNav" data-v="-1" ${i === 0 ? 'disabled' : ''}>${I.left}</button><div class="mtitle"><b>${labelM(r.month, true)}</b>${tag(r.month) ? `<span class="chip">${tag(r.month)}</span>` : ''}</div><button class="icon-btn" data-act="monthNav" data-v="1" ${i === navMonths.length - 1 ? 'disabled' : ''}>${I.right}</button></div>
-      ${flow}
+  return `<div class="mbody">${flow}
       ${planned.length ? `<h3 style="margin:8px 0 2px">Da fare</h3>${rowsHTML}` : ''}
       ${done ? `<h3 style="margin:12px 0 2px">Fatto</h3>${done}` : ''}
-      ${!planned.length && !done ? '<div class="empty">Niente in questo mese.</div>' : ''}
-    </div>`;
+      ${!planned.length && !done ? '<div class="empty">Niente in questo mese.</div>' : ''}</div>`;
 }
 function doneInMonthHTML(st, m) {
   const rows = [];
@@ -682,6 +719,15 @@ function doneInMonthHTML(st, m) {
   if (!rows.length) return '';
   rows.sort((a, b) => a.date < b.date ? -1 : 1);
   return rows.map(x => `<button class="row tap done" data-act="${x.act}" data-v="${x.id}"><span class="tick on">${I.check}</span><div class="lbl"><div class="t">${esc(x.label)}${x.sub ? ` · ${esc(x.sub)}` : ''}</div><div class="s">${fmtDate(x.date)}${x.planned != null && Math.abs(x.planned - x.amount) > 0.5 ? ` <span class="chip ${x.amount > x.planned ? 'warn' : 'ok'}">previsto ${fmt(x.planned)}</span>` : ''}${x.unplanned ? ' <span class="chip warn">non previsto</span>' : ''}</div></div><span class="amt ${x.kind}">${x.kind === 'in' ? '+' : '−'}${fmt(x.amount)}</span>${I.chev}</button>`).join('');
+}
+const PALETTE = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
+function donutHTML(st) {
+  const items = st.contracts.map((c, i) => ({ c, cost: contractStats(c).cost, color: PALETTE[i % PALETTE.length] })).filter(x => x.cost > 0).sort((a, b) => b.cost - a.cost);
+  const total = items.reduce((a, x) => a + x.cost, 0); if (!total) return '';
+  const R = 60, sw = 22, C = 2 * Math.PI * R, gap = items.length > 1 ? 3 : 0; let off = 0;
+  const segs = items.map(x => { const len = Math.max(0, x.cost / total * C - gap); const seg = `<circle r="${R}" cx="75" cy="75" fill="none" stroke="${x.color}" stroke-width="${sw}" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}" transform="rotate(-90 75 75)"/>`; off += len + gap; return seg; }).join('');
+  const legend = items.map(x => `<button data-act="openContract" data-v="${x.c.id}"><i class="dot" style="background:${x.color}"></i><span class="n">${esc(x.c.name)}</span><span class="p">${Math.round(x.cost / total * 100)}%</span><span class="a">${fmt(x.cost)}</span></button>`).join('');
+  return `<div class="card"><div class="card-head"><h2>Come si dividono</h2></div><div class="donut-wrap"><svg viewBox="0 0 150 150">${segs}<text x="75" y="70" text-anchor="middle" style="font-size:11px;font-weight:700;fill:var(--muted)">Lavori</text><text x="75" y="88" text-anchor="middle" style="font-size:15px;font-weight:800;fill:var(--ink)">${fmt(total)}</text></svg><div class="dl">${legend}</div></div></div>`;
 }
 function contrattiHTML() {
   const st = state; if (!st.contracts.length) return `<div class="card"><div class="empty">Nessun contratto.</div><div class="actions" style="margin-top:8px"><button class="btn primary" data-act="newContract">${I.plus}Contratto</button></div></div>`;
@@ -694,7 +740,7 @@ function contrattiHTML() {
         <div class="bar"><i style="width:${s.pct}%;background:${KINDS[kindOf(c.kind)].color}"></i></div></div>
       <span class="amt">${fmt(s.remaining)}</span>${I.chev}</button>`;
   }).join('');
-  return `<div class="card"><div class="card-head"><h2>Contratti</h2><span class="muted" style="font-size:12px;font-weight:700">da pagare ${fmt(T.remaining)} su ${fmt(T.cost)}</span></div>${rows}
+  return `${donutHTML(st)}<div class="card"><div class="card-head"><h2>Contratti</h2><span class="muted" style="font-size:12px;font-weight:700">da pagare ${fmt(T.remaining)} su ${fmt(T.cost)}</span></div>${rows}
     <div class="actions" style="margin-top:12px"><button class="btn" data-act="newContract">${I.plus}Contratto</button></div></div>`;
 }
 function contractPageHTML(c) {
@@ -702,7 +748,7 @@ function contractPageHTML(c) {
   const pays = [...c.payments].sort((a, b) => { const ma = a.actual ? a.actual.date : planMonth(st, a) + '-32', mb = b.actual ? b.actual.date : planMonth(st, b) + '-32'; return ma < mb ? -1 : 1; });
   const rows = pays.map(p => {
     const pm = p.planned ? planMonth(st, p) : null; const late = p.planned && !p.actual && pm < cur;
-    const when = p.planned ? `${labelM(pm, true)}${p.planned.offset != null ? ` · ${offLabel(p.planned.offset, st.site.duration).toLowerCase()}` : ''}` : 'non previsto';
+    const when = p.planned ? labelM(pm, true) : 'non previsto';
     const amt = p.planned ? p.planned.amount : p.actual.amount;
     const st2 = p.actual ? `<span class="st paid">pagato ${fmtDate(p.actual.date)}${p.planned && Math.abs(p.actual.amount - p.planned.amount) > 0.5 ? ` · ${fmt(p.actual.amount)}` : ''}</span>` : late ? `<span class="st late">in ritardo</span>` : `<span class="st muted">da pagare</span>`;
     const inner = `<div class="t">${esc(p.note || (p.planned ? 'Pagamento' : 'Extra'))}</div><div class="a">${fmt(amt)}</div><div class="s">${when}</div>${st2}`;
@@ -719,39 +765,6 @@ function contractPageHTML(c) {
     ${rows || '<div class="empty">Nessun pagamento</div>'}
   </div>`;
 }
-function drawChart(rows) {
-  const box = $('#chart'); if (!box) return;
-  const W = chartW = box.clientWidth || 340; const H = W < 520 ? 260 : 220, padT = 26, padB = 28, padL = 54, padR = 8;
-  const st = state, cushion = st.money.cushion; const n = rows.length; const cur = curMonth(); const months = rows.map(r => r.month);
-  const vals = rows.map(r => r.bal);
-  let min = Math.min(0, ...vals), max = Math.max(cushion, ...vals, 1);
-  const span = (max - min) || 1; max += span * .14; if (min < 0) min -= span * .06;
-  const y = v => padT + (max - v) / (max - min) * (H - padT - padB);
-  const slot = (W - padL - padR) / n; const bw = Math.min(28, Math.max(8, slot * .66)); const x = i => padL + slot * i + (slot - bw) / 2;
-  const dataMax = Math.max(cushion, ...vals); const tk = ticks(min, max, 3).filter(v => v >= min && v <= dataMax);
-  const tickTxt = v => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '.').replace('-', '−');
-  const bar = (i, r) => {
-    const col = balColor(r.bal, cushion);
-    const x0 = x(i), yb = y(0), yv = y(r.bal), rr = Math.min(4, Math.abs(yb - yv) / 2, bw / 2);
-    const d = r.bal >= 0 ? `M${x0},${yb}L${x0},${yv + rr}Q${x0},${yv} ${x0 + rr},${yv}L${x0 + bw - rr},${yv}Q${x0 + bw},${yv} ${x0 + bw},${yv + rr}L${x0 + bw},${yb}Z` : `M${x0},${yb}L${x0},${yv - rr}Q${x0},${yv} ${x0 + rr},${yv}L${x0 + bw - rr},${yv}Q${x0 + bw},${yv} ${x0 + bw},${yv - rr}L${x0 + bw},${yb}Z`;
-    const sel = r.month === expandedMonth;
-    return `<path d="${d}" fill="${col}" opacity="${sel ? 1 : r.past ? .4 : .7}"/>${sel ? `<text x="${x0 + bw / 2}" y="${(r.bal >= 0 ? yv - 7 : yv + 13)}" text-anchor="middle" class="sel">${fmt(r.bal)}</text>` : ''}`;
-  };
-  const ws = worksFirst(st), we = worksLast(st); let band = '';
-  const i0 = months.findIndex(m => m >= ws), i1 = months.reduce((a, m, i) => m <= we ? i : a, -1);
-  if (i0 >= 0 && i1 >= i0) { const bx = padL + slot * i0, bwid = slot * (i1 - i0 + 1); band = `<rect x="${bx}" y="${padT - 14}" width="${bwid}" height="${H - padB - padT + 14}" rx="8" fill="var(--line-2)" opacity=".7"/><text x="${bx + 6}" y="${padT - 3}" style="fill:var(--muted)">lavori</text>`; }
-  const labelEvery = slot < 26 ? 2 : 1;
-  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
-    ${band}
-    ${tk.map(v => `<line x1="${padL}" x2="${W - padR}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${padL - 6}" y="${y(v) + 4}" text-anchor="end">${tickTxt(v)}</text>`).join('')}
-    <line x1="${padL}" x2="${W - padR}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line)" stroke-width="1"/>
-    ${cushion > 0 ? `<line x1="${padL}" x2="${W - padR}" y1="${y(cushion)}" y2="${y(cushion)}" stroke="var(--warn)" stroke-width="1" stroke-dasharray="3 4" opacity=".8"/><text x="${W - padR}" y="${y(cushion) - 4}" text-anchor="end" style="fill:var(--warn)">minimo ${tickTxt(cushion)}</text>` : ''}
-    ${rows.map((r, i) => bar(i, r)).join('')}
-    ${rows.map((r, i) => `<text x="${x(i) + bw / 2}" y="${H - 8}" text-anchor="middle" class="${r.month === expandedMonth || r.month === cur ? 'sel' : ''}">${i % labelEvery === 0 || r.month === expandedMonth || r.month === cur ? (r.month === cur ? 'ora' : MONTHS[Number(r.month.slice(5)) - 1]) : ''}</text>`).join('')}
-    ${rows.map((r, i) => `<rect class="hit" x="${padL + slot * i}" y="0" width="${slot}" height="${H}" fill="transparent" data-act="month" data-v="${r.month}"><title>${labelM(r.month, true)}: ${fmt(r.bal)}</title></rect>`).join('')}
-  </svg>`;
-}
-
 /* ===== Imposta ===== */
 function renderImposta() {
   const st = state, m = st.money, s = st.site, L = st.loan; const cur = curMonth();
@@ -763,7 +776,6 @@ function renderImposta() {
         <div class="field"><label>Da parte oggi</label><input type="number" inputmode="decimal" step="any" data-money="available" value="${m.available}"></div>
         <div class="field"><label>Metto da parte al mese</label><input type="number" inputmode="decimal" step="any" data-money="monthly" value="${m.monthly}"></div>
         <div class="field"><label>Non scendere sotto</label><input type="number" inputmode="decimal" step="any" data-money="cushion" value="${m.cushion}"></div>
-        <div class="field"><label>Inizio lavori</label><select data-site="startMonth">${monthOptions(s.startMonth, addMonths(cur, -12), addMonths(cur, 24))}</select></div>
       </div>
     </div>
     <div class="card" id="loanCard"><div class="card-head"><h2>Prestito</h2><label class="switch-row" style="padding:0;gap:8px"><span class="muted" style="font-size:12px;font-weight:700">nel piano</span><input type="checkbox" class="switch" data-loan="active" ${L.active ? 'checked' : ''}></label></div>
@@ -889,7 +901,7 @@ async function ghLinkAction(form) {
     setStatus('saved'); closeSheet(); $('#gate').classList.add('hidden'); render();
   } catch (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = label; }
 }
-function storeCredential(repo, token) { try { if (navigator.credentials && window.PasswordCredential) navigator.credentials.store(new PasswordCredential({ id: repo, password: token, name: 'Cantiere' })); } catch { } }
+function storeCredential(repo, token) { try { if (navigator.credentials && window.PasswordCredential) navigator.credentials.store(new PasswordCredential({ id: repo, password: token, name: 'Conto Cantiere' })); } catch { } }
 async function autoSignIn() {
   if (!(navigator.credentials && window.PasswordCredential)) return false;
   try {
@@ -939,16 +951,7 @@ const dlg = () => $('#sheet');
 function openSheet(type, data = {}) { sheet = { type, ...data }; renderSheet(); if (!dlg().open) dlg().showModal(); dlg().querySelector('.sheet-body').scrollTop = 0; }
 function closeSheet() { sheet = null; if (dlg().open) dlg().close(); }
 function monthRangeWide() { const cur = curMonth(); return [addMonths(cur, -12), addMonths(state.money.endMonth > cur ? state.money.endMonth : cur, 24)]; }
-function whenOptions(pl) {
-  const s = state.site; const cur = pl.offset != null ? `o:${pl.offset}` : `m:${pl.month}`;
-  const offs = []; for (let k = 0; k <= 12; k++) offs.push(k); if (pl.offset != null && !offs.includes(pl.offset)) offs.push(pl.offset);
-  let o = `<optgroup label="Rispetto all'inizio lavori">`;
-  for (const k of offs) o += `<option value="o:${k}" ${cur === `o:${k}` ? 'selected' : ''}>${offLabel(k)} · ${labelM(addMonths(s.startMonth, k))}</option>`;
-  o += `</optgroup><optgroup label="Mese fisso">`;
-  const [mf, mt] = monthRangeWide(); let list = monthRange(mf, mt); if (pl.offset == null && isYM(pl.month) && !list.includes(pl.month)) list = [pl.month, ...list].sort();
-  for (const m of list) o += `<option value="m:${m}" ${cur === `m:${m}` ? 'selected' : ''}>${labelM(m, true)}</option>`;
-  return o + `</optgroup>`;
-}
+function whenOptions(pl) { const [mf, mt] = monthRangeWide(); return monthOptions(pl.month, mf, mt); }
 const head = title => `<div class="sheet-head"><h2>${title}</h2><button class="icon-btn" data-act="closeSheet" aria-label="Chiudi">${I.x}</button></div>`;
 function renderSheet() {
   const b = $('#sheetBody'); const t = sheet.type;
@@ -997,6 +1000,7 @@ function renderSheet() {
       <h3 style="margin-bottom:8px">Pagamenti <span class="muted" style="font-weight:600">· con IVA</span></h3>
       ${d.payments.map((p, i) => p.planned ? `<div class="pay-row"><input type="number" inputmode="decimal" step="any" data-pf="${i}:amount" value="${p.planned.amount || ''}" placeholder="€"><select data-pf="${i}:when">${whenOptions(p.planned)}</select><input data-pf="${i}:note" value="${esc(p.note)}" placeholder="acconto, saldo…"><button type="button" class="x" data-act="delPay" data-v="${i}" aria-label="Togli" ${p.actual ? 'disabled' : ''}>${I.x}</button>${p.actual ? `<div class="paid">✓ pagato ${fmtDate(p.actual.date)} · ${fmt(p.actual.amount)}</div>` : ''}</div>` : '').join('')}
       <div class="chips">${[30, 40, 50].map(pc => `<button type="button" data-act="addPayPct" data-v="${pc}">+ ${pc}%</button>`).join('')}<button type="button" data-act="addPayRest" id="restChip">+ resto</button><button type="button" data-act="addPay">+ altro</button></div>
+          ${d.payments.some(p => p.planned && !p.actual) ? `<div class="chips" style="margin-top:8px;align-items:center"><span class="hint">Sposta i non pagati</span><button type="button" data-act="shiftPays" data-v="-1">−1 mese</button><button type="button" data-act="shiftPays" data-v="1">+1 mese</button></div>` : ''}
       <div id="resNote">${resNoteHTML(d)}</div>
       ${d.payments.some(p => !p.planned) ? `<div class="hint" style="margin-bottom:10px">Extra pagati: ${fmt(s.extra)}</div>` : ''}
       <div class="field"><label>Note</label><input data-f="notes" value="${esc(d.notes)}"></div>
@@ -1022,7 +1026,7 @@ function onAct(act, el) {
   switch (act) {
     case 'tab': showTab(v, el.dataset.focus); break;
     case 'cantView': cantView = v; renderCantiere(); break;
-    case 'month': expandedMonth = v; renderCantiere(); break;
+    case 'month': expandedMonth = v; renderCantiere(); setTimeout(() => $('#view-cantiere .month.open')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 30); break;
     case 'openContract': contractView = v; renderCantiere(); window.scrollTo({ top: 0 }); break;
     case 'backContracts': contractView = null; cantView = 'contratti'; renderCantiere(); break;
     case 'present': setPresent(v === 'on'); renderCantiere(); window.scrollTo({ top: 0 }); break;
@@ -1050,7 +1054,7 @@ function onAct(act, el) {
     case 'extraSave': { const e = sheet.e; const a = r2(num($('#extraAmount').value)); if (!(a > 0)) return; e.amount = a; e.label = $('#extraLabel').value.trim() || 'Entrata'; const d = $('#extraDate').value; if (isDate(d)) e.date = d; persist(); closeSheet(); render(); toast('Salvato'); break; }
     case 'extraDelete': { if (!sheet.confirmDel) { sheet.confirmDel = true; renderSheet(); return; } state.extras = state.extras.filter(x => x.id !== sheet.e.id); persist(); closeSheet(); render(); toast('Eliminato'); break; }
     case 'monthNav': { const i = navMonths.indexOf(expandedMonth); const j = i + Number(v); if (j >= 0 && j < navMonths.length) { expandedMonth = navMonths[j]; renderCantiere(); } break; }
-    case 'strip': expandedMonth = v || null; cantView = 'mesi'; contractView = null; showTab('cantiere'); break;
+    case 'strip': expandedMonth = v || null; cantView = 'mesi'; contractView = null; showTab('cantiere'); setTimeout(() => $('#view-cantiere .month.open')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 60); break;
     case 'allinea': openSheet('allinea'); break;
     case 'allineaSave': { const v2 = r2(num($('#allineaAmount').value)); state.money.available = v2; state.money.availableAt = nowISO(); persist(); closeSheet(); render(); toast('Aggiornato'); break; }
     case 'newContract': openSheet('contract', { isNew: true, draft: { id: uid(), name: '', kind: 'impresa', net: 0, vat: 10, notes: '', payments: [] } }); setTimeout(() => $('#sheetBody [data-f="name"]')?.focus(), 60); break;
@@ -1058,6 +1062,7 @@ function onAct(act, el) {
     case 'setKind': sheet.draft.kind = v; renderSheet(); break;
     case 'setVat': sheet.draft.vat = num(v); renderSheet(); break;
     case 'delPay': { const p = sheet.draft.payments[Number(v)]; if (p && !p.actual) sheet.draft.payments.splice(Number(v), 1); renderSheet(); break; }
+    case 'shiftPays': for (const p of sheet.draft.payments) if (p.planned && !p.actual) p.planned.month = addMonths(p.planned.month, Number(v)); renderSheet(); break;
     case 'addPay': sheet.draft.payments.push({ id: uid(), note: '', planned: { amount: 0, ...nextPlan(sheet.draft) }, actual: null }); renderSheet(); focusLastPay(); break;
     case 'addPayPct': sheet.draft.payments.push({ id: uid(), note: `${v}%`, planned: { amount: r2(contractTotal(sheet.draft) * num(v) / 100), ...nextPlan(sheet.draft) }, actual: null }); renderSheet(); break;
     case 'addPayRest': { const res = contractStats(sheet.draft).unscheduled; if (res <= 0.5) { toast('Niente da aggiungere'); return; } sheet.draft.payments.push({ id: uid(), note: 'Saldo', planned: { amount: res, ...nextPlan(sheet.draft) }, actual: null }); renderSheet(); break; }
@@ -1091,7 +1096,7 @@ $('#sheetBody').addEventListener('input', e => {
   if (el.dataset.f) { const f = el.dataset.f; d[f] = ['net', 'vat'].includes(f) ? num(el.value) : el.value; if (f === 'vat') $$('#sheetBody .chips [data-act="setVat"]').forEach(b => b.classList.toggle('on', num(b.dataset.v) === d.vat)); refreshDerived(); }
   else if (el.dataset.pf) {
     const [i, f] = el.dataset.pf.split(':'); const p = d.payments[Number(i)]; if (!p || !p.planned) return;
-    if (f === 'when') { const [k, val] = el.value.split(':'); if (k === 'o') { p.planned.offset = Number(val); p.planned.month = planMonth(state, p); } else { p.planned.offset = null; p.planned.month = val; } }
+    if (f === 'when') { p.planned.offset = null; p.planned.month = el.value; }
     else if (f === 'amount') p.planned.amount = num(el.value); else p[f] = el.value;
     refreshDerived();
   }
@@ -1109,7 +1114,7 @@ function softImposta() {
   const lb = $('#loanBox'); if (lb) lb.innerHTML = loanResultHTML(L, r, n);
   const nb = $('#needBox'); if (nb) nb.innerHTML = needHTML(suggestLoan(state));
 }
-let rsz; window.addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { if (tab === 'cantiere' && $('#chart') && $('#chart').clientWidth !== chartW) renderCantiere(); if (tab === 'oggi' && $('#strip')) drawStrip(project(state)); }, 120); });
+let rsz; window.addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { if (tab === 'oggi' && $('#strip')) drawStrip(project(state)); }, 120); });
 
 /* ===== boot ===== */
 let mode = null; try { mode = localStorage.getItem(MODE_KEY); } catch { }

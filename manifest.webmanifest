@@ -1,9 +1,15 @@
 {
-  "name": "Finanze lavori",
-  "short_name": "Finanze",
+  "name": "Conto Cantiere",
+  "short_name": "Conto Cantiere",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f3f2ec",
   "theme_color": "#0f7b5a",
-  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
 }
