@@ -361,7 +361,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 (() => {
 'use strict';
 /* ===== utils ===== */
-const BUILD = '1 ott 2026, 12:21';
+const BUILD = '1 ott 2026, 12:24';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -431,7 +431,7 @@ function normalize(st) {
   }));
   for (const c of st.contracts) for (const p of c.payments) if (p.planned && p.planned.offset != null) { p.planned.month = addMonths(s.startMonth, p.planned.offset); p.planned.offset = null; }
   st.extras = (Array.isArray(st.extras) ? st.extras : []).map(e => ({ id: e.id || uid(), label: String(e.label || 'Entrata'), amount: num(e.amount), date: isDate(e.date) ? e.date : todayISO(), at: /^\d{4}-\d{2}-\d{2}T/.test(e.at || '') ? e.at : nowISO() }));
-  const worksEnd = addMonths(worksLast(st), 1); m.endMonth = worksEnd > addMonths(cur, 6) ? worksEnd : addMonths(cur, 6);
+  const wl = worksLast(st); m.endMonth = wl > addMonths(cur, 2) ? wl : addMonths(cur, 2);
   st.updatedAt = st.updatedAt || nowISO();
   return st;
 }
@@ -540,8 +540,8 @@ function project(st, loanOv) {
     const r = r2(rata(loan.amount, loan.rate, loan.years)); const n = Math.max(1, Math.round(loan.years * 12));
     for (let k = 1; k <= n; k++) { const m = addMonths(loan.month, k); if (m > end) break; if (!byM[m]) continue; byM[m].out += r; byM[m].rows.push({ kind: 'out', label: 'Rata prestito', sub: `${k} di ${n}`, amount: r, key: 'loan:rata:' + m }); }
   }
-  let bal = availableNow(st); const monthly = st.money.monthly;
-  const rows = months.map((m, i) => { const b = byM[m]; if (i > 0) b.inc += monthly; if (i > 0 && monthly) b.rows.unshift({ kind: 'in', label: 'Messi da parte', sub: 'ogni mese', amount: monthly, key: 'monthly:' + m }); bal = r2(bal + b.inc - b.out); return { ...b, bal }; });
+  let bal = availableNow(st); const monthly = st.money.monthly; const wl = worksLast(st);
+  const rows = months.map((m, i) => { const b = byM[m]; const saves = i > 0 && m <= wl && monthly > 0; if (saves) { b.inc += monthly; b.rows.unshift({ kind: 'in', label: 'Messi da parte', sub: 'ogni mese', amount: monthly, key: 'monthly:' + m }); } bal = r2(bal + b.inc - b.out); return { ...b, bal }; });
   const minRow = rows.reduce((a, r) => r.bal < a.bal ? r : a, rows[0]);
   return { months, rows, minRow, endRow: rows[rows.length - 1], cur, end, beyond, pend, start: availableNow(st) };
 }
