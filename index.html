@@ -366,7 +366,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 (() => {
 'use strict';
 /* ===== utils ===== */
-const BUILD = '1 ott 2026, 12:28';
+const BUILD = '7 ott 2026 · entrate confermate';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -402,24 +402,27 @@ const kindOf = k => KINDS[k] ? k : 'altro';
 /* ===== state ===== */
 const LS_KEY = 'finanze-lavori:v3', LS_OLD = 'finanze-lavori:v2', MODE_KEY = 'finanze-lavori:mode';
 let state = null;
+let legacyIncomeNotice = false;
 
 function blankState() {
   const cur = curMonth();
   return {
-    version: 3,
-    money: { available: 0, availableAt: nowISO(), monthly: 0, cushion: 0, endMonth: addMonths(cur, 8) },
+    version: 4,
+    money: { available: 0, availableAt: nowISO(), monthly: 0, monthlySince: cur, cushion: 0, endMonth: addMonths(cur, 8) },
     site: { startMonth: cur, duration: 6 },
     loan: { active: false, amount: 0, month: '', rate: 8, years: 5 },
-    contracts: [], extras: [], updatedAt: nowISO(),
+    contracts: [], extras: [], savings: [], updatedAt: nowISO(),
   };
 }
 function normalize(st) {
   const b = blankState(); const cur = curMonth();
   st = st && typeof st === 'object' ? st : {};
-  st.version = 3;
+  if (st.money && st.version !== 4) legacyIncomeNotice = true;
+  st.version = 4;
   st.money = Object.assign(b.money, st.money || {}); const m = st.money;
   m.available = num(m.available); m.monthly = Math.max(0, num(m.monthly)); m.cushion = Math.max(0, num(m.cushion));
   if (!/^\d{4}-\d{2}-\d{2}T/.test(m.availableAt || '')) m.availableAt = nowISO();
+  if (!isYM(m.monthlySince)) m.monthlySince = cur;
   st.site = Object.assign(b.site, st.site || {}); const s = st.site;
   if (!isYM(s.startMonth)) s.startMonth = cur;
   s.duration = Math.min(36, Math.max(1, Math.round(num(s.duration)) || 6));
@@ -435,8 +438,12 @@ function normalize(st) {
     })).filter(p => p.planned || p.actual),
   }));
   for (const c of st.contracts) for (const p of c.payments) if (p.planned && p.planned.offset != null) { p.planned.month = addMonths(s.startMonth, p.planned.offset); p.planned.offset = null; }
-  st.extras = (Array.isArray(st.extras) ? st.extras : []).map(e => ({ id: e.id || uid(), label: String(e.label || 'Entrata'), amount: num(e.amount), date: isDate(e.date) ? e.date : todayISO(), at: /^\d{4}-\d{2}-\d{2}T/.test(e.at || '') ? e.at : nowISO() }));
+  st.extras = (Array.isArray(st.extras) ? st.extras : []).map(e => ({ id: e.id || uid(), label: String(e.label || 'Entrata'), amount: num(e.amount), date: isDate(e.date) ? e.date : todayISO(), at: /^\d{4}-\d{2}-\d{2}T/.test(e.at || '') ? e.at : nowISO(), savingMonth: isYM(e.savingMonth) ? e.savingMonth : null }));
+  const plans = new Map();
+  for (const p of Array.isArray(st.savings) ? st.savings : []) if (isYM(p.month)) plans.set(p.month, { month: p.month, amount: Math.max(0, num(p.amount)) });
+  st.savings = [...plans.values()];
   const wl = worksLast(st); m.endMonth = wl > addMonths(cur, 2) ? wl : addMonths(cur, 2);
+  syncSavings(st);
   st.updatedAt = st.updatedAt || nowISO();
   return st;
 }
@@ -444,6 +451,29 @@ const planMonth = (st, p) => p.planned.offset != null ? addMonths(st.site.startM
 function worksSpan(st) { let a = curMonth(), b = curMonth(); let any = false; for (const c of st.contracts) for (const p of c.payments) { const m = p.actual ? p.actual.date.slice(0, 7) : (p.planned ? planMonth(st, p) : null); if (!m) continue; if (!any || m < a) a = m; if (!any || m > b) b = m; any = true; } return [a, b]; }
 const worksFirst = st => worksSpan(st)[0];
 const worksLast = st => worksSpan(st)[1];
+function savingActual(st, month) { return st.extras.find(e => e.savingMonth === month) || null; }
+function syncSavings(st, updateFuture = false) {
+  const cur = curMonth(); const plans = new Map(st.savings.map(p => [p.month, p]));
+  for (const month of monthRange(st.money.monthlySince, worksLast(st))) if (!plans.has(month)) {
+    const p = { month, amount: st.money.monthly }; st.savings.push(p); plans.set(month, p);
+  }
+  if (updateFuture) for (const p of st.savings) if (p.month >= cur && !savingActual(st, p.month)) p.amount = st.money.monthly;
+  st.savings.sort((a, b) => a.month.localeCompare(b.month));
+}
+function pendingSaving(st, month) {
+  const p = st.savings.find(p => p.month === month);
+  return p && p.amount > 0 && month <= worksLast(st) && !savingActual(st, month) ? p : null;
+}
+function recordSaving(st, month, amount, date, label) {
+  if (!isYM(month) || !st.savings.some(p => p.month === month) || !(amount > 0) || !isDate(date) || date > todayISO()) return null;
+  let e = savingActual(st, month);
+  if (!e) { e = { id: uid(), savingMonth: month, at: nowISO() }; st.extras.push(e); }
+  Object.assign(e, { amount: r2(amount), date, label: label || `Risparmio ${labelM(month, true)}` });
+  return e;
+}
+function savingRow(p, past = false) {
+  return { kind: 'in', label: `Risparmio ${labelM(p.month, true)}`, sub: past ? 'non confermato · escluso dalla previsione' : 'previsto entro fine mese', amount: p.amount, key: 'monthly:' + p.month, savingMonth: p.month };
+}
 function offLabel(k) { return k === 0 ? 'Inizio lavori' : `Inizio +${k}`; }
 
 function migrateV2(d) {
@@ -490,7 +520,8 @@ function migrateV1(d) {
 }
 function anyToState(d) {
   if (!d || typeof d !== 'object') throw new Error('Formato non valido');
-  if (d.version === 3 && d.money) return normalize(d);
+  if (d.version !== 4) legacyIncomeNotice = true;
+  if ((d.version === 3 || d.version === 4) && d.money) return normalize(d);
   if (d.version === 2 && d.settings) return normalize(migrateV2(d));
   if (d.plan && Array.isArray(d.expenses)) return normalize(migrateV1(d));
   throw new Error('Formato non riconosciuto');
@@ -521,10 +552,9 @@ function contractStats(c) {
 }
 function rata(P, rate, years) { const n = Math.max(1, Math.round(years * 12)); const i = rate / 1200; if (!(P > 0)) return 0; return i === 0 ? P / n : P * i / (1 - Math.pow(1 + i, -n)); }
 function availableNow(st) {
-  const m = st.money; const cur = curMonth(); const base = m.availableAt.slice(0, 7);
-  let v = m.available + Math.max(0, monthDiff(base, cur)) * m.monthly;
-  for (const c of st.contracts) for (const p of c.payments) if (p.actual && afterAlign(p.actual, m.availableAt)) v -= p.actual.amount;
-  for (const e of st.extras) if (afterAlign(e, m.availableAt)) v += e.amount;
+  const m = st.money; const today = todayISO(); let v = m.available;
+  for (const c of st.contracts) for (const p of c.payments) if (p.actual && p.actual.date <= today && afterAlign(p.actual, m.availableAt)) v -= p.actual.amount;
+  for (const e of st.extras) if (e.date <= today && afterAlign(e, m.availableAt)) v += e.amount;
   return r2(v);
 }
 function afterAlign(x, at) { const d = at.slice(0, 10); return x.date > d || (x.date === d && x.at > at); }
@@ -539,14 +569,21 @@ function project(st, loanOv) {
   const byM = Object.fromEntries(months.map(m => [m, { month: m, inc: 0, out: 0, rows: [] }]));
   const pend = pendingPayments(st); const beyond = [];
   for (const x of pend) { const b = byM[x.bucket]; if (!b) { beyond.push(x); continue; } b.out += x.amount; b.rows.push({ kind: 'out', label: x.c.name, sub: x.p.note, amount: x.amount, key: x.key, overdue: x.overdue, c: x.c, p: x.p }); }
+  // Future-dated imported movements affect the forecast, never today's cash.
+  for (const e of st.extras) if (e.date > todayISO() && afterAlign(e, st.money.availableAt) && byM[e.date.slice(0, 7)]) {
+    const b = byM[e.date.slice(0, 7)]; b.inc += e.amount; b.rows.push({ kind: 'in', label: e.label, sub: fmtDate(e.date), amount: e.amount, key: 'extra:' + e.id });
+  }
+  for (const c of st.contracts) for (const p of c.payments) if (p.actual && p.actual.date > todayISO() && afterAlign(p.actual, st.money.availableAt) && byM[p.actual.date.slice(0, 7)]) {
+    const b = byM[p.actual.date.slice(0, 7)]; b.out += p.actual.amount; b.rows.push({ kind: 'out', label: c.name, sub: fmtDate(p.actual.date), amount: p.actual.amount, key: 'actual:' + p.id });
+  }
   const loan = loanOv || st.loan;
   if (loan && loan.active && loan.amount > 0 && isYM(loan.month)) {
     if (byM[loan.month]) { byM[loan.month].inc += loan.amount; byM[loan.month].rows.push({ kind: 'in', label: 'Prestito', sub: 'arriva sul conto', amount: loan.amount, key: 'loan:in' }); }
     const r = r2(rata(loan.amount, loan.rate, loan.years)); const n = Math.max(1, Math.round(loan.years * 12));
     for (let k = 1; k <= n; k++) { const m = addMonths(loan.month, k); if (m > end) break; if (!byM[m]) continue; byM[m].out += r; byM[m].rows.push({ kind: 'out', label: 'Rata prestito', sub: `${k} di ${n}`, amount: r, key: 'loan:rata:' + m }); }
   }
-  let bal = availableNow(st); const monthly = st.money.monthly; const wl = worksLast(st);
-  const rows = months.map((m, i) => { const b = byM[m]; const saves = i > 0 && m <= wl && monthly > 0; if (saves) { b.inc += monthly; b.rows.unshift({ kind: 'in', label: 'Messi da parte', sub: 'ogni mese', amount: monthly, key: 'monthly:' + m }); } bal = r2(bal + b.inc - b.out); return { ...b, bal }; });
+  let bal = availableNow(st);
+  const rows = months.map(m => { const b = byM[m]; const saving = pendingSaving(st, m); if (saving) { b.inc += saving.amount; b.rows.unshift(savingRow(saving)); } bal = r2(bal + b.inc - b.out); return { ...b, bal }; });
   const minRow = rows.reduce((a, r) => r.bal < a.bal ? r : a, rows[0]);
   return { months, rows, minRow, endRow: rows[rows.length - 1], cur, end, beyond, pend, start: availableNow(st) };
 }
@@ -554,6 +591,7 @@ function pastRows(st, p) {
   const cur = p.cur; let first = cur;
   for (const c of st.contracts) for (const pay of c.payments) { if (pay.actual && pay.actual.date.slice(0, 7) < first) first = pay.actual.date.slice(0, 7); if (pay.planned && planMonth(st, pay) < first) first = planMonth(st, pay); }
   for (const e of st.extras) if (e.date.slice(0, 7) < first) first = e.date.slice(0, 7);
+  for (const s of st.savings) if (s.amount > 0 && s.month < first) first = s.month;
   const floor = addMonths(cur, -12); if (first < floor) first = floor;
   if (first >= cur) return [];
   const months = monthRange(first, addMonths(cur, -1)); const sums = {}; for (const mm of months) sums[mm] = { inc: 0, out: 0 };
@@ -632,10 +670,14 @@ function totals(st) { let cost = 0, paid = 0; for (const c of st.contracts) { co
 function renderOggi() {
   const st = state; const v = verdict(st); const p = v.p; const cur = p.cur; const m = st.money; const T = totals(st);
   const due = p.pend.filter(x => x.bucket <= addMonths(cur, 1));
+  const saving = pendingSaving(st, cur);
   const rows = due.map(x => `<div class="row due">
       <div class="lbl"><div class="t">${esc(x.c.name)}</div><div class="s">${x.p.note ? `${esc(x.p.note)} · ` : ''}${x.overdue ? `<span class="chip neg">era ${labelM(x.month, true)}</span>` : labelM(x.month, true)}</div></div>
       <div class="due-r"><span class="amt">−${fmt(x.amount)}</span><button class="btn sm primary" data-act="fatto" data-v="${x.p.id}">Fatto</button><button class="icon-btn" data-act="segna" data-v="${x.p.id}" aria-label="Cambia importo o data">${I.pencil}</button></div>
-    </div>`).join('');
+    </div>`).join('') + (saving ? `<div class="row due">
+      <div class="lbl"><div class="t">Risparmio ${labelM(cur, true)}</div><div class="s">previsto entro fine mese</div></div>
+      <div class="due-r"><span class="amt in">+${fmt(saving.amount)}</span><button class="btn sm primary" data-act="incassaSaving" data-v="${cur}">Incassato</button><button class="icon-btn" data-act="editSaving" data-v="${cur}" aria-label="Cambia importo o data dell'entrata">${I.pencil}</button></div>
+    </div>` : '');
   $('#view-oggi').innerHTML = `
     <div class="card verdict ${v.level}">
       <div class="k">Fino a ${labelM(m.endMonth, true)}</div>
@@ -649,12 +691,12 @@ function renderOggi() {
     </div>
     <div class="card cash">
       <div class="card-head" style="margin-bottom:2px"><div class="k">Da parte per i lavori</div><button class="btn sm" data-act="allinea">Aggiorna</button></div>
-      <div class="v ${p.start < 0 ? 'neg' : ''}">${fmt(p.start)}</div><div class="d">${m.monthly ? `+${fmt(m.monthly)} ogni mese fino a ${labelM(worksLast(st))}` : ''}</div>
+      <div class="v ${p.start < 0 ? 'neg' : ''}">${fmt(p.start)}</div><div class="d">${m.monthly ? `Previsti +${fmt(m.monthly)} al mese fino a ${labelM(worksLast(st))}` : ''}</div>
       <div class="strip" id="strip"></div>
       <div class="strip-foot"><span>a fine mese</span><button class="link" data-act="strip" data-v="">Mesi ›</button></div>
     </div>
     <div class="card">
-      <div class="card-head"><h2>Da segnare<span class="sub">${due.length || ''}</span></h2></div>
+      <div class="card-head"><h2>Da segnare<span class="sub">${due.length + (saving ? 1 : 0) || ''}</span></h2></div>
       ${rows || `<div class="empty">Niente fino a ${labelM(addMonths(cur, 2), true)}.</div>`}
     </div>`;
   drawStrip(p);
@@ -710,10 +752,11 @@ function monthBodyHTML(st, p, r, i) {
   const flow = r.past ? ((r.out || r.inc) ? `<div class="mflow"><span>Pagato <b>−${fmt(r.out)}</b></span>${r.inc ? `<span>incassato <b class="in">+${fmt(r.inc)}</b></span>` : ''}</div>` : '')
     : isCur ? `<div class="mflow"><span>Da parte oggi <b>${fmt(p.start)}</b></span><span>da pagare <b>−${fmt(r.out)}</b></span>${r.inc ? `<span>in arrivo <b class="in">+${fmt(r.inc)}</b></span>` : ''}<span>fine mese <b class="${balCls(r.bal, cushion)}">${fmt(r.bal)}</b></span></div>`
     : `<div class="mflow"><span>Parti con <b>${fmt(navRows[i - 1].bal)}</b></span><span>entra <b class="in">+${fmt(r.inc)}</b></span><span>esce <b>−${fmt(r.out)}</b></span><span>fine mese <b class="${balCls(r.bal, cushion)}">${fmt(r.bal)}</b></span></div>`;
-  const planned = r.past ? p.pend.filter(x => x.month === r.month).map(x => ({ kind: 'out', label: x.c.name, sub: x.p.note, amount: x.amount, p: x.p, overdue: true })) : r.rows.filter(x => !x.key.startsWith('monthly:'));
+  const missedSaving = r.past ? pendingSaving(st, r.month) : null;
+  const planned = r.past ? [...p.pend.filter(x => x.month === r.month).map(x => ({ kind: 'out', label: x.c.name, sub: x.p.note, amount: x.amount, p: x.p, overdue: true })), ...(missedSaving ? [savingRow(missedSaving, true)] : [])] : r.rows;
   const rowsHTML = planned.map(x => `<div class="row due ghost">
       <div class="lbl"><div class="t">${esc(x.label)}</div><div class="s">${x.sub ? esc(x.sub) : ''}${x.overdue ? ` <span class="chip neg">era ${labelM(planMonth(st, x.p), true)}</span>` : ''}</div></div>
-      <div class="due-r"><span class="amt ${x.kind}">${x.kind === 'in' ? '+' : '−'}${fmt(x.amount)}</span>${x.p ? `<button class="btn sm primary" data-act="fatto" data-v="${x.p.id}">Fatto</button><button class="icon-btn" data-act="segna" data-v="${x.p.id}" aria-label="Cambia importo o data">${I.pencil}</button>` : ''}</div>
+      <div class="due-r"><span class="amt ${x.kind}">${x.kind === 'in' ? '+' : '−'}${fmt(x.amount)}</span>${x.p ? `<button class="btn sm primary" data-act="fatto" data-v="${x.p.id}">Fatto</button><button class="icon-btn" data-act="segna" data-v="${x.p.id}" aria-label="Cambia importo o data">${I.pencil}</button>` : x.savingMonth && x.savingMonth <= p.cur ? `<button class="btn sm primary" data-act="${r.past ? 'editSaving' : 'incassaSaving'}" data-v="${x.savingMonth}">Incassato</button><button class="icon-btn" data-act="editSaving" data-v="${x.savingMonth}" aria-label="Cambia importo o data dell'entrata">${I.pencil}</button>` : ''}</div>
     </div>`).join('');
   const done = doneInMonthHTML(st, r.month);
   return `<div class="mbody ${r.past ? '' : balCls(r.bal, cushion)}">${flow}
@@ -875,6 +918,7 @@ async function pullCloud(silent) {
     if (rs.updatedAt > state.updatedAt) { state = rs; lastPulled = rs.updatedAt; saveLocal(); render(); setStatus('saved'); if (!silent) toast('Aggiornato dall\'altro dispositivo'); }
     else if (rs.updatedAt < state.updatedAt) { lastPulled = rs.updatedAt; await ghPut(state); lastPulled = state.updatedAt; setStatus('saved'); }
     else { lastPulled = rs.updatedAt; setStatus('saved'); }
+    notifyIncomeMigration();
   } catch (e) { setStatus('offline'); if (e.auth && !silent) toast(e.message); }
 }
 function linkFormHTML(btnLabel) {
@@ -906,7 +950,7 @@ async function ghLinkAction(form) {
     else { gh.sha = remote?.sha || null; await ghPut(state); lastPulled = state.updatedAt; toast('Collegato'); }
     if (!j.private) setTimeout(() => toast('Occhio: il repo è pubblico'), 2800);
     storeCredential(repo, token);
-    setStatus('saved'); closeSheet(); $('#gate').classList.add('hidden'); render();
+    setStatus('saved'); closeSheet(); $('#gate').classList.add('hidden'); render(); notifyIncomeMigration();
   } catch (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = label; }
 }
 function storeCredential(repo, token) { try { if (navigator.credentials && window.PasswordCredential) navigator.credentials.store(new PasswordCredential({ id: repo, password: token, name: 'Conto Cantiere' })); } catch { } }
@@ -930,6 +974,12 @@ function toast(msg, action) {
   const t = $('#toast'); t.innerHTML = esc(msg) + (action ? `<button data-act="toastAct">${esc(action.label)}</button>` : ''); t._action = action?.fn || null;
   t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), action ? 5000 : 2600);
 }
+function notifyIncomeMigration() {
+  if (!legacyIncomeNotice) return; legacyIncomeNotice = false;
+  try { if (localStorage.getItem('finanze-lavori:incomeUpgradeShown') === '4') return; localStorage.setItem('finanze-lavori:incomeUpgradeShown', '4'); } catch { }
+  saveLocal();
+  toast('Le entrate ora vanno confermate. Verifica il saldo disponibile.', { label: 'Aggiorna', fn: () => openSheet('allinea') });
+}
 
 /* ===== actions ===== */
 function findPayment(id) { for (const c of state.contracts) { const p = c.payments.find(x => x.id === id); if (p) return { c, p }; } return null; }
@@ -938,6 +988,20 @@ function markPaid(id, amount, date, note) {
   const { c, p } = f; p.actual = { amount: r2(amount), date, at: nowISO() }; if (note != null) p.note = note;
   persist(); render();
   toast(`Fatto · ${c.name} · ${fmt(amount)}`, { label: 'Annulla', fn: () => { p.actual = null; persist(); render(); } });
+}
+function confirmSaving(month, amount, date, label) {
+  const old = savingActual(state, month);
+  if (old) { toast('Entrata già registrata'); return; }
+  const e = recordSaving(state, month, amount, date, label); if (!e) return;
+  persist(); render();
+  toast(`Incassato · ${fmt(amount)}`, { label: 'Annulla', fn: () => { state.extras = state.extras.filter(x => x.id !== e.id); persist(); render(); } });
+}
+function editSaving(month) {
+  const actual = savingActual(state, month);
+  if (actual) { openSheet('extra', { e: actual }); return; }
+  const p = pendingSaving(state, month); if (!p || month > curMonth()) return;
+  const lastDay = new Date(Number(month.slice(0, 4)), Number(month.slice(5)), 0).getDate();
+  openSheet('extra', { isNew: true, e: { id: null, savingMonth: month, amount: p.amount, label: `Risparmio ${labelM(month, true)}`, date: month === curMonth() ? todayISO() : `${month}-${pad2(lastDay)}` } });
 }
 function useLoan() {
   const sug = suggestLoan(state); if (!(sug.amount > 0) || !isFinite(sug.amount)) return;
@@ -970,7 +1034,7 @@ function renderSheet() {
       <div class="amount-in"><input type="number" inputmode="decimal" step="any" id="plusAmount" value="${d.amount || ''}" placeholder="0"><span>€</span></div>
       ${d.kind === 'out' ? `<div class="k" style="margin-bottom:6px">Per cosa</div><div class="chips">${state.contracts.map(c => `<button type="button" class="${d.contractId === c.id ? 'on' : ''}" data-act="plusContract" data-v="${c.id}">${dot(c.kind)}${esc(c.name)}</button>`).join('')}<button type="button" class="${d.contractId === 'altro' ? 'on' : ''}" data-act="plusContract" data-v="altro">Altro</button></div>
         ${pend.length ? `<div class="k" style="margin:12px 0 6px">Era previsto?</div><div class="chips">${pend.map(x => `<button type="button" class="${d.paymentId === x.p.id ? 'on' : ''}" data-act="plusPayment" data-v="${x.p.id}">${esc(x.p.note || 'pagamento')} · ${fmt(x.amount)}</button>`).join('')}<button type="button" class="${d.paymentId === null && d.contractId ? 'on' : ''}" data-act="plusPayment" data-v="">No, in più</button></div>` : ''}`
-      : `<div class="field"><label>Cosa</label><input id="plusLabel" value="${esc(d.label)}" placeholder="Es. rimborso, regalo"></div>`}
+      : `${pendingSaving(state, curMonth()) ? `<div class="k" style="margin-bottom:6px">Era previsto?</div><div class="chips"><button type="button" class="${d.savingMonth === curMonth() ? 'on' : ''}" data-act="plusSaving" data-v="${curMonth()}">Risparmio ${labelM(curMonth())} · ${fmt(pendingSaving(state, curMonth()).amount)}</button><button type="button" class="${!d.savingMonth ? 'on' : ''}" data-act="plusSaving" data-v="">No, in più</button></div>` : ''}<div class="field"><label>Cosa</label><input id="plusLabel" value="${esc(d.label)}" placeholder="Es. rimborso, regalo"></div>`}
       <div class="k" style="margin:12px 0 6px">Quando</div><div class="chips">${[['today', 'Oggi'], ['yesterday', 'Ieri'], ['other', 'Altra data']].map(([k, l]) => `<button type="button" class="${d.when === k ? 'on' : ''}" data-act="plusWhen" data-v="${k}">${l}</button>`).join('')}</div>
       ${d.when === 'other' ? `<div class="field" style="margin-top:8px"><input type="date" id="plusDate" value="${d.date}"></div>` : ''}
       <div class="field" style="margin-top:12px"><label>Nota</label><input id="plusNote" value="${esc(d.note)}"></div>
@@ -986,10 +1050,12 @@ function renderSheet() {
       <div class="sheet-actions"><button class="btn primary" data-act="segnaSave">${p.actual ? 'Salva' : 'Segna pagato'}</button>${p.actual ? (pl ? `<button class="btn danger" data-act="segnaUndo">Non l'ho pagato</button>` : `<button class="btn danger" data-act="segnaDelete">${sheet.confirmDel ? 'Confermi? Elimino' : 'Elimina'}</button>`) : ''}</div>`;
   } else if (t === 'extra') {
     const e = sheet.e;
-    b.innerHTML = `${head('Incassato')}
+    b.innerHTML = `${head(sheet.isNew ? `Risparmio ${labelM(e.savingMonth, true)}` : 'Incassato')}
+      ${e.savingMonth ? `<div class="hint" style="margin-bottom:10px">Sostituisce il risparmio previsto di ${labelM(e.savingMonth, true)}.</div>` : ''}
       <div class="amount-in"><input type="number" inputmode="decimal" step="any" id="extraAmount" value="${e.amount}"><span>€</span></div>
-      <div class="grid2"><div class="field"><label>Cosa</label><input id="extraLabel" value="${esc(e.label)}"></div><div class="field"><label>Il</label><input type="date" id="extraDate" value="${e.date}"></div></div>
-      <div class="sheet-actions"><button class="btn primary" data-act="extraSave">Salva</button><button class="btn danger" data-act="extraDelete">${sheet.confirmDel ? 'Confermi? Elimino' : 'Elimina'}</button></div>`;
+      <div class="grid2"><div class="field"><label>Cosa</label><input id="extraLabel" value="${esc(e.label)}"></div><div class="field"><label>Il</label><input type="date" id="extraDate" max="${todayISO()}" value="${e.date}"></div></div>
+      <div class="err" id="extraErr"></div>
+      <div class="sheet-actions"><button class="btn primary" data-act="extraSave">${sheet.isNew ? 'Incassato' : 'Salva'}</button>${sheet.isNew ? '' : `<button class="btn danger" data-act="extraDelete">${sheet.confirmDel ? 'Confermi? Elimino' : 'Elimina'}</button>`}</div>`;
   } else if (t === 'allinea') {
     b.innerHTML = `${head('Da parte per i lavori')}
       <div class="hint" style="margin-bottom:10px">Disponibile oggi.</div>
@@ -1042,15 +1108,20 @@ function onAct(act, el) {
     case 'openContract': contractView = v; renderCantiere(); window.scrollTo({ top: 0 }); break;
     case 'backContracts': contractView = null; cantView = 'contratti'; renderCantiere(); break;
     case 'present': setPresent(v === 'on'); renderCantiere(); window.scrollTo({ top: 0 }); break;
-    case 'plus': openSheet('plus', { d: { kind: 'out', amount: 0, contractId: state.contracts[0]?.id || 'altro', paymentId: null, label: '', when: 'today', date: todayISO(), note: '' } }); break;
+    case 'plus': openSheet('plus', { d: { kind: 'out', amount: 0, contractId: state.contracts[0]?.id || 'altro', paymentId: null, savingMonth: null, label: '', when: 'today', date: todayISO(), note: '' } }); break;
     case 'plusKind': readPlus(); sheet.d.kind = v; renderSheet(); break;
     case 'plusContract': readPlus(); sheet.d.contractId = v; sheet.d.paymentId = null; renderSheet(); break;
     case 'plusPayment': { readPlus(); sheet.d.paymentId = v || null; if (v) { const f = findPayment(v); if (f && !sheet.d.amount) sheet.d.amount = f.p.planned.amount; } renderSheet(); break; }
+    case 'plusSaving': { readPlus(); sheet.d.savingMonth = v || null; if (v) { const p = pendingSaving(state, v); if (p && !sheet.d.amount) sheet.d.amount = p.amount; sheet.d.label = `Risparmio ${labelM(v, true)}`; } else if (sheet.d.label.startsWith('Risparmio ')) sheet.d.label = ''; renderSheet(); break; }
     case 'plusWhen': readPlus(); sheet.d.when = v; renderSheet(); if (v === 'other') setTimeout(() => $('#plusDate')?.focus(), 50); break;
     case 'plusSave': {
       readPlus(); const d = sheet.d; const amount = r2(d.amount); const date = dateFor(d);
       if (!(amount > 0)) { $('#plusErr').textContent = 'Metti l\'importo'; return; }
-      if (d.kind === 'in') { state.extras.push({ id: uid(), label: d.label.trim() || 'Entrata', amount, date, at: nowISO() }); persist(); closeSheet(); render(); toast(`Incassato · ${fmt(amount)}`); return; }
+      if (d.kind === 'in') {
+        if (date > todayISO()) { $('#plusErr').textContent = 'L’incasso deve essere avvenuto: scegli oggi o una data passata.'; return; }
+        if (d.savingMonth) { closeSheet(); confirmSaving(d.savingMonth, amount, date, d.label.trim()); return; }
+        state.extras.push({ id: uid(), label: d.label.trim() || 'Entrata', amount, date, at: nowISO(), savingMonth: null }); persist(); closeSheet(); render(); toast(`Incassato · ${fmt(amount)}`); return;
+      }
       if (d.paymentId) { const f = findPayment(d.paymentId); if (f) { closeSheet(); markPaid(d.paymentId, amount, date, d.note.trim() || f.p.note); return; } }
       let c = state.contracts.find(x => x.id === d.contractId);
       if (!c) { c = state.contracts.find(x => x.kind === 'altro' && x.name === 'Altro'); if (!c) { c = { id: uid(), name: 'Altro', kind: 'altro', net: 0, vat: 0, notes: 'Spese del cantiere non previste', payments: [] }; state.contracts.push(c); } }
@@ -1063,7 +1134,14 @@ function onAct(act, el) {
     case 'segnaUndo': { const { p } = sheet; p.actual = null; persist(); closeSheet(); render(); toast('Rimesso da pagare'); break; }
     case 'segnaDelete': { if (!sheet.confirmDel) { sheet.confirmDel = true; renderSheet(); return; } const { c, p } = sheet; c.payments = c.payments.filter(x => x.id !== p.id); persist(); closeSheet(); render(); toast('Eliminato'); break; }
     case 'editExtra': { const e = state.extras.find(x => x.id === v); if (e) openSheet('extra', { e }); break; }
-    case 'extraSave': { const e = sheet.e; const a = r2(num($('#extraAmount').value)); if (!(a > 0)) return; e.amount = a; e.label = $('#extraLabel').value.trim() || 'Entrata'; const d = $('#extraDate').value; if (isDate(d)) e.date = d; persist(); closeSheet(); render(); toast('Salvato'); break; }
+    case 'incassaSaving': { const p = pendingSaving(state, v); if (p && v === curMonth()) confirmSaving(v, p.amount, todayISO()); break; }
+    case 'editSaving': editSaving(v); break;
+    case 'extraSave': {
+      const e = sheet.e; const a = r2(num($('#extraAmount').value)); const d = $('#extraDate').value; const label = $('#extraLabel').value.trim() || 'Entrata';
+      if (!(a > 0) || !isDate(d) || d > todayISO()) { $('#extraErr').textContent = 'Indica un importo positivo e una data non successiva a oggi.'; return; }
+      if (sheet.isNew) { closeSheet(); confirmSaving(e.savingMonth, a, d, label); break; }
+      Object.assign(e, { amount: a, date: d, label }); persist(); closeSheet(); render(); toast('Salvato'); break;
+    }
     case 'extraDelete': { if (!sheet.confirmDel) { sheet.confirmDel = true; renderSheet(); return; } state.extras = state.extras.filter(x => x.id !== sheet.e.id); persist(); closeSheet(); render(); toast('Eliminato'); break; }
     case 'monthNav': { const i = navMonths.indexOf(expandedMonth); const j = i + Number(v); if (j >= 0 && j < navMonths.length) { expandedMonth = navMonths[j]; renderCantiere(); } break; }
     case 'strip': expandedMonth = v || null; cantView = 'mesi'; contractView = null; showTab('cantiere'); setTimeout(() => $('#view-cantiere .month.open')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 60); break;
@@ -1086,7 +1164,7 @@ function onAct(act, el) {
     case 'delContract': { if (!sheet.confirmDel) { sheet.confirmDel = true; renderSheet(); return; } state.contracts = state.contracts.filter(x => x.id !== sheet.draft.id); persist(); closeSheet(); contractView = null; render(); toast('Contratto eliminato'); break; }
     case 'export': exportJSON(); break;
     case 'import': $('#importFile').click(); break;
-    case 'doImport': state = sheet.st; persist(); closeSheet(); contractView = null; expandedMonth = null; render(); toast('Caricato'); break;
+    case 'doImport': state = sheet.st; persist(); closeSheet(); contractView = null; expandedMonth = null; render(); toast('Caricato'); notifyIncomeMigration(); break;
     case 'sample': if (!imposta.confirmSample) { imposta.confirmSample = true; render(); return; } imposta.confirmSample = false; state = sampleState(); persist(); contractView = null; expandedMonth = null; showTab('oggi'); toast('Esempio caricato'); break;
     case 'logout': openSheet('logout'); break;
     case 'logoutGo': closeSheet(); logout(); break;
@@ -1118,7 +1196,7 @@ $('#importFile').addEventListener('change', e => { const f = e.target.files?.[0]
 document.addEventListener('input', e => {
   const el = e.target; if (el.closest('#sheetBody')) return;
   if (el.dataset.loan) { const L = state.loan, f = el.dataset.loan; L[f] = el.type === 'checkbox' ? el.checked : f === 'month' ? el.value : num(el.value); normalize(state); persist(); softImposta(); }
-  else if (el.dataset.money) { const f = el.dataset.money; if (f === 'available') { state.money.available = num(el.value); state.money.availableAt = nowISO(); } else state.money[f] = Math.max(0, num(el.value)); normalize(state); persist(); softImposta(); }
+  else if (el.dataset.money) { const f = el.dataset.money; if (f === 'available') { state.money.available = num(el.value); state.money.availableAt = nowISO(); } else state.money[f] = Math.max(0, num(el.value)); normalize(state); if (f === 'monthly') syncSavings(state, true); persist(); softImposta(); }
   else if (el.dataset.site) { const f = el.dataset.site; state.site[f] = f === 'duration' ? num(el.value) : el.value; normalize(state); persist(); softImposta(); }
 });
 document.addEventListener('change', e => { const el = e.target; if (el.closest('#sheetBody')) return; if ((el.dataset.loan || el.dataset.money || el.dataset.site) && (el.tagName === 'SELECT' || el.type === 'checkbox')) renderImposta(); });
@@ -1142,7 +1220,11 @@ async function checkUpdate() {
   try { const r = await fetch(location.pathname, { cache: 'no-store' }); const t = await r.text(); const m = t.match(/const BUILD = '([^']+)'/); if (m && m[1] !== BUILD) toast("C'è una versione nuova", { label: 'Ricarica', fn: () => location.reload() }); } catch { }
 }
 setTimeout(checkUpdate, 4000);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; checkUpdate(); if (gh && !pendingSave) pullCloud(false); });
+function refreshToday() { const cur = curMonth(), wl = worksLast(state); state.money.endMonth = wl > addMonths(cur, 2) ? wl : addMonths(cur, 2); syncSavings(state); render(); }
+let displayedDate = todayISO();
+document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; displayedDate = todayISO(); refreshToday(); checkUpdate(); if (gh && !pendingSave) pullCloud(false); });
+setInterval(() => { const date = todayISO(); if (date !== displayedDate) { displayedDate = date; refreshToday(); } }, 60000);
+if (local) notifyIncomeMigration();
 window.addEventListener('online', () => { if (gh && pendingSave) pushCloud(); });
 })();
 </script>
