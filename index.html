@@ -390,7 +390,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 (() => {
 'use strict';
 /* ===== utils ===== */
-const BUILD = '7 ott 2026 · entrate confermate';
+const BUILD = '3 nov 2026 · voci di spesa';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -1252,7 +1252,7 @@ function onAct(act, el) {
     case 'logoutGo': closeSheet(); logout(); break;
     case 'localOnly': try { localStorage.setItem(MODE_KEY, 'local'); } catch { } $('#gate').classList.add('hidden'); setStatus('local'); render(); break;
     case 'useLoan': useLoan(); break;
-    case 'reload': location.reload(); break;
+    case 'reload': { const url = new URL(location.href); url.searchParams.set('_cc_version', String(Date.now())); location.assign(url.toString()); break; }
     case 'toastAct': { const t = $('#toast'); const fn = t._action; t._action = null; t.classList.remove('show'); if (fn) fn(); break; }
     case 'closeSheet': closeSheet(); break;
   }
@@ -1300,7 +1300,7 @@ else { $('#gateForm').innerHTML += linkFormHTML('Entra') + `<button class="btn g
 let lastCheck = 0;
 async function checkUpdate() {
   if (!navigator.onLine || location.protocol === 'file:' || Date.now() - lastCheck < 60000) return; lastCheck = Date.now();
-  try { const r = await fetch(location.pathname, { cache: 'no-store' }); const t = await r.text(); const m = t.match(/const BUILD = '([^']+)'/); if (m && m[1] !== BUILD) toast("C'è una versione nuova", { label: 'Ricarica', fn: () => location.reload() }); } catch { }
+  try { const url = new URL(location.href); url.searchParams.set('_cc_version', String(Date.now())); const r = await fetch(url.toString(), { cache: 'no-store' }); const t = await r.text(); const m = t.match(/const BUILD = '([^']+)'/); if (m && m[1] !== BUILD) toast("C'è una versione nuova", { label: 'Ricarica', fn: () => location.assign(url.toString()) }); } catch { }
 }
 setTimeout(checkUpdate, 4000);
 function refreshToday() { const cur = curMonth(), wl = worksLast(state); state.money.endMonth = wl > addMonths(cur, 2) ? wl : addMonths(cur, 2); syncSavings(state); render(); }
