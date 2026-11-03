@@ -311,6 +311,35 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
   .sheet-body{max-height:none}
 }
 
+
+/* Focused contract editor: only contract detail changes */
+.contract-category,.category-edit{border:1px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden}
+.contract-category > summary,.category-edit > summary{display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer;list-style:none}
+.contract-category > summary::-webkit-details-marker,.category-edit > summary::-webkit-details-marker{display:none}
+.contract-category > summary::before,.category-edit > summary::before{content:'›';font-size:19px;color:var(--muted)}
+.contract-category[open] > summary::before,.category-edit[open] > summary::before{content:'⌄'}
+.category-info{min-width:0;flex:1;font-size:14px}
+.category-info small{display:block;color:var(--muted);font-size:11px;font-weight:600;margin-top:3px}
+.contract-category > summary > b,.category-edit > summary > b{font-size:14px;white-space:nowrap}
+.category-products,.category-edit-body{padding:2px 12px 12px;border-top:1px solid var(--line-2)}
+.category-products .item-panel{margin:6px 0;border:0;border-bottom:1px solid var(--line-2);border-radius:0}
+.category-products .item-panel:last-child{border-bottom:0}
+.category-products .item-summary{padding:9px 2px}
+.category-products .item-summary .item-name{font-weight:600}
+.category-products .item-summary .item-amount small{display:block;font-size:11px;font-weight:600;color:var(--muted)}
+.category-edit-body .field{margin:10px 0}
+.compact-item{padding:10px 0;border-bottom:1px solid var(--line-2)}
+.compact-item:last-of-type{border-bottom:0}
+.compact-item .item-edit-row{margin:0}
+.compact-item .item-vendor{margin-top:6px;padding:7px 10px;font-size:12px;width:calc(100% - 36px);border-radius:8px}
+.contract-payment-editor{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.contract-payment-editor > summary{cursor:pointer;font-size:15px;font-weight:800;padding:10px 0}
+.contract-payment-editor > summary span{font-size:12px}
+.payment-editor-body{padding-bottom:10px}
+.contract-save-bar{position:sticky;bottom:-1px;background:var(--surface);border-top:1px solid var(--line);margin:12px -18px -18px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));display:flex;gap:8px;z-index:2}
+.contract-save-bar .primary{flex:1}
+.contract-save-bar button{min-height:44px}
+
 /* line items */
 .item-section{margin:16px 0 12px}
 .item-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:10px 0 8px}
@@ -390,7 +419,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 (() => {
 'use strict';
 /* ===== utils ===== */
-const BUILD = '3 nov 2026 · scorrimento contratti';
+const BUILD = '3 nov 2026 · categorie contratti';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -455,7 +484,7 @@ function normalize(st) {
   if (!isYM(st.loan.month)) st.loan.month = '';
   st.contracts = (Array.isArray(st.contracts) ? st.contracts : []).map(c => ({
     id: c.id || uid(), name: String(c.name || ''), kind: kindOf(c.kind), net: num(c.net), vat: num(c.vat), notes: String(c.notes || ''),
-    items: (Array.isArray(c.items) ? c.items : []).map(i => ({ id: i.id || uid(), name: String(i.name || ''), amount: r2(Math.max(0, num(i.amount))) })),
+    items: (Array.isArray(c.items) ? c.items : []).map(i => ({ id: i.id || uid(), name: String(i.name || ''), amount: r2(Math.max(0, num(i.amount))), category: String(i.category || ''), vendor: String(i.vendor || '') })),
     payments: (Array.isArray(c.payments) ? c.payments : []).map(p => ({
       id: p.id || uid(), note: String(p.note || ''), itemId: typeof p.itemId === 'string' ? p.itemId : null,
       planned: p.planned && typeof p.planned === 'object' ? { amount: num(p.planned.amount), month: isYM(p.planned.month) ? p.planned.month : cur, offset: (p.planned.offset === null || p.planned.offset === undefined || p.planned.offset === '') ? null : Math.max(0, Math.round(num(p.planned.offset))) } : null,
@@ -570,6 +599,18 @@ function sampleState() {
 
 /* ===== computations ===== */
 const contractTotal = c => c.items?.length ? r2(c.items.reduce((sum, item) => sum + Math.max(0, num(item.amount)), 0)) : r2(c.net * (1 + c.vat / 100));
+
+function itemGroups(c) {
+  const groups = new Map();
+  for (const item of c.items || []) {
+    const name = String(item.category || '').trim();
+    if (!groups.has(name)) groups.set(name, []);
+    groups.get(name).push(item);
+  }
+  return [...groups].map(([name, items]) => ({
+    name, items, total: r2(items.reduce((sum, i) => sum + Math.max(0, num(i.amount)), 0))
+  }));
+}
 function itemStats(c,item){
   let paid=0,planned=0,extra=0;
   for(const p of c.payments){
@@ -839,30 +880,39 @@ function paymentRowHTML(st,p,present){
   const inner=`<div class="t">${esc(p.note||(p.planned?'Pagamento':'Extra'))}</div><div class="a">${fmt(amt)}</div><div class="s">${when}</div>${status}`;
   return present?`<div class="trow">${inner}</div>`:`<button class="trow tap" data-act="segna" data-v="${p.id}">${inner}</button>`;
 }
-function contractItemsHTML(c,present){
-  if(!c.items?.length)return '';
-  const panels=c.items.map(item=>{
-    const s=itemStats(c,item);
-    const pays=c.payments.filter(p=>p.itemId===item.id).sort((a,b)=>{
-      const ma=a.actual?a.actual.date:planMonth(state,a)+'-32',mb=b.actual?b.actual.date:planMonth(state,b)+'-32';
+
+function contractItemsHTML(c,present) {
+  if (!c.items?.length) return '';
+  const categories = itemGroups(c);
+  const itemHTML = item => {
+    const stats = itemStats(c, item);
+    const payments = c.payments.filter(p => p.itemId === item.id).sort((a,b) => {
+      const ma = a.actual ? a.actual.date : (a.planned ? planMonth(state,a)+'-32' : '');
+      const mb = b.actual ? b.actual.date : (b.planned ? planMonth(state,b)+'-32' : '');
       return ma.localeCompare(mb);
     });
-    return `<details class="item-panel">
-      <summary class="item-summary">
-        <span class="item-name">${esc(item.name||'Voce senza nome')}<small>${fmt(s.paid)} pagati · ${fmt(s.remaining)} da pagare</small></span>
-        <span class="item-amount">${fmt(s.cost)}<span class="item-bar"><i style="width:${s.pct}%"></i></span></span>
-      </summary>
-      <div class="item-payments">${pays.map(p=>paymentRowHTML(state,p,present)).join('')||'<div class="empty">Nessun pagamento collegato a questa voce.</div>'}
-        ${s.unscheduled>0.5?`<div class="hint">${fmt(s.unscheduled)} ancora da programmare</div>`:''}
-      </div>
+    const body = payments.map(p => paymentRowHTML(state, p, present)).join('');
+    return `<details class="item-panel item-product">
+      <summary class="item-summary"><span class="item-name">${esc(item.name || 'Voce senza nome')}${item.vendor ? `<small>${esc(item.vendor)}</small>` : ''}</span>
+        <span class="item-amount">${fmt(stats.cost)}<small>${fmt(stats.paid)} pagati</small></span></summary>
+      <div class="item-payments">${body || '<div class="empty">Nessun pagamento associato.</div>'}
+        ${stats.unscheduled > 0.5 ? `<div class="hint">${fmt(stats.unscheduled)} ancora da programmare</div>` : ''}</div>
+    </details>`;
+  };
+  const html = categories.map(g => {
+    const paid = r2(g.items.reduce((sum,item) => sum + itemStats(c,item).paid,0));
+    return `<details class="contract-category" ${categories.length === 1 ? 'open' : ''}>
+      <summary><span class="category-info"><b>${esc(g.name || 'Altre voci')}</b><small>${g.items.length} ${g.items.length === 1 ? 'prodotto' : 'prodotti'} · ${fmt(paid)} pagati</small></span>
+        <b>${fmt(g.total)}</b></summary>
+      <div class="category-products">${g.items.map(itemHTML).join('')}</div>
     </details>`;
   }).join('');
-  const unassigned=c.payments.filter(p=>!p.itemId);
-  return `<div class="item-section"><div class="item-section-head"><h3>Voci di spesa</h3><span class="hint">${c.items.length} ${c.items.length===1?'voce':'voci'} · importi IVA inclusa</span></div>
-    ${panels}
-    ${unassigned.length?`<div class="note warn not-present">${unassigned.length} ${unassigned.length===1?'pagamento da assegnare':'pagamenti da assegnare'} a una voce, da Modifica.</div>`:''}
-  </div>`;
+  const count=c.items.length;
+  const notAssigned=c.payments.filter(p=>!p.itemId).length;
+  return `<section class="item-section"><div class="item-section-head"><h3>Voci di spesa</h3><span class="hint">${categories.length} categorie · ${count} voci</span></div>
+    ${html}${notAssigned ? `<div class="hint not-present" style="margin-top:8px">${notAssigned} pagamenti non assegnati, visibili sotto.</div>` : ''}</section>`;
 }
+
 function contractPageHTML(c) {
   const st = state; const s = contractStats(c); const cur = curMonth(); const present = document.body.classList.contains('present');
   const pays = [...c.payments].sort((a, b) => { const ma = a.actual ? a.actual.date : planMonth(st, a) + '-32', mb = b.actual ? b.actual.date : planMonth(st, b) + '-32'; return ma < mb ? -1 : 1; });
@@ -1086,21 +1136,41 @@ function closeSheet() { sheet = null; if (dlg().open) dlg().close(); }
 function monthRangeWide() { const cur = curMonth(); return [addMonths(cur, -12), addMonths(state.money.endMonth > cur ? state.money.endMonth : cur, 24)]; }
 function whenOptions(pl) { const [mf, mt] = monthRangeWide(); return monthOptions(pl.month, mf, mt); }
 const head = title => `<div class="sheet-head"><h2>${title}</h2><button class="icon-btn" data-act="closeSheet" aria-label="Chiudi">${I.x}</button></div>`;
-function contractItemsEditorHTML(d){
-  if(!d.items?.length)return `<div class="field" style="margin:10px 0 14px"><label>Dettaglio delle spese</label>
-    <div class="hint">Vuoi distinguere materiali o lavorazioni, ognuno con il suo importo e i suoi pagamenti?</div>
+
+function contractItemsEditorHTML(d) {
+  if (!d.items?.length) return `<div class="field" style="margin:10px 0 14px"><label>Dettaglio delle spese (facoltativo)</label>
+    <div class="hint">Mantieni il contratto semplice oppure aggiungi prodotti e categorie.</div>
     <div class="chips"><button type="button" data-act="enableItems">+ Suddividi in voci</button></div></div>`;
+  const groups = itemGroups(d);
+  const active = sheet.openGroup;
+  const sections = groups.map(group => {
+    const firstIndex = d.items.indexOf(group.items[0]);
+    const rows = group.items.map(item => {
+      const i = d.items.indexOf(item);
+      const locked = d.payments.some(p => p.itemId === item.id);
+      return `<div class="compact-item">
+        <div class="item-edit-row"><input data-item-field="${i}:name" aria-label="Prodotto" placeholder="Nome prodotto" value="${esc(item.name)}">
+        <input type="number" inputmode="decimal" step="0.01" min="0" data-item-field="${i}:amount" aria-label="Importo con IVA" placeholder="€" value="${item.amount || ''}">
+        <button type="button" class="x" data-act="delItem" data-v="${i}" aria-label="Elimina prodotto" ${locked ? 'disabled title="Prima scollega i pagamenti"' : ''}>${I.x}</button></div>
+        <input class="item-vendor" data-item-field="${i}:vendor" placeholder="Fornitore (facoltativo)" aria-label="Fornitore" value="${esc(item.vendor || '')}">
+      </div>`;
+    }).join('');
+    return `<details class="category-edit" ${active === group.name ? 'open' : ''}>
+      <summary><span class="category-info"><b>${esc(group.name || 'Altre voci')}</b><small>${group.items.length} voci</small></span><b>${fmt(group.total)}</b></summary>
+      <div class="category-edit-body">
+        <div class="field"><label>Categoria</label><input data-category-rename="${firstIndex}" aria-label="Nome categoria" value="${esc(group.name)}" placeholder="Es. Doccia"></div>
+        ${rows}
+        <div class="chips"><button type="button" data-act="addItemToCategory" data-v="${firstIndex}">+ Prodotto</button></div>
+      </div>
+    </details>`;
+  }).join('');
   return `<section class="item-editor">
-    <div class="item-section-head"><h3>Voci di spesa</h3><span class="hint">Importi con IVA inclusa</span></div>
-    ${d.items.map((item,i)=>`<div class="item-edit-row">
-      <input aria-label="Nome voce" data-item-field="${i}:name" placeholder="Es. rivestimenti, piatto doccia…" value="${esc(item.name)}">
-      <input type="number" inputmode="decimal" step="0.01" min="0" aria-label="Importo IVA inclusa" data-item-field="${i}:amount" placeholder="€" value="${item.amount||''}">
-      <button type="button" class="x" aria-label="Elimina voce" data-act="delItem" data-v="${i}" ${d.payments.some(p=>p.itemId===item.id)?'disabled title="Ha pagamenti collegati"':''}>${I.x}</button>
-    </div>`).join('')}
-    <div class="chips"><button type="button" data-act="addItem">+ Voce</button></div>
-    <div class="hint" style="margin-top:7px">Associa ciascun pagamento alla voce corrispondente. Gli importi qui definiscono il totale del contratto.</div>
+    <div class="item-section-head"><h3>Categorie e prodotti</h3><span class="hint">Importi con IVA inclusa</span></div>
+    ${sections}
+    <div class="chips"><button type="button" data-act="addCategory">+ Categoria</button></div>
   </section>`;
 }
+
 function renderSheet() {
   const b = $('#sheetBody'); const t = sheet.type;
   if (t === 'plus') {
@@ -1149,14 +1219,14 @@ function renderSheet() {
       <div class="chips" style="margin:-6px 0 10px">${[[0, '0%'], [4, '4%'], [10, '10%'], [22, '22%'], [26.88, '4% + 22%']].map(([v, l]) => `<button type="button" class="${d.vat === v ? 'on' : ''}" data-act="setVat" data-v="${v}">${l}</button>`).join('')}</div>`}
       ${contractItemsEditorHTML(d)}
       <div class="total-line" id="totalLine">${totalLineHTML(d)}</div>
-      <h3 style="margin-bottom:8px">Pagamenti <span class="muted" style="font-weight:600">· con IVA</span></h3>
+      <details class="contract-payment-editor"><summary>Pagamenti <span class="muted" style="font-weight:600">· con IVA · ${d.payments.filter(p => p.planned).length} previsti</span></summary><div class="payment-editor-body">
       ${d.payments.map((p, i) => p.planned ? `<div class="pay-row"><input type="number" inputmode="decimal" step="any" data-pf="${i}:amount" value="${p.planned.amount || ''}" placeholder="€"><select data-pf="${i}:when">${whenOptions(p.planned)}</select><input data-pf="${i}:note" value="${esc(p.note)}" placeholder="acconto, saldo…"><button type="button" class="x" data-act="delPay" data-v="${i}" aria-label="Togli" ${p.actual ? 'disabled' : ''}>${I.x}</button>${p.actual ? `<div class="paid">✓ pagato ${fmtDate(p.actual.date)} · ${fmt(p.actual.amount)}</div>` : ''}${d.items?.length ? `<select class="pay-item-select" aria-label="Voce del pagamento" data-pf="${i}:itemId"><option value="">Voce · non assegnata</option>${d.items.map(item => `<option value="${item.id}" ${p.itemId === item.id ? 'selected' : ''}>${esc(item.name || 'Senza nome')}</option>`).join('')}</select>` : ''}</div>` : '').join('')}
       <div class="chips">${[30, 40, 50].map(pc => `<button type="button" data-act="addPayPct" data-v="${pc}">+ ${pc}%</button>`).join('')}<button type="button" data-act="addPayRest" id="restChip">+ resto</button><button type="button" data-act="addPay">+ altro</button></div>
           ${d.payments.some(p => p.planned && !p.actual) ? `<div class="chips" style="margin-top:8px;align-items:center"><span class="hint">Sposta i non pagati</span><button type="button" data-act="shiftPays" data-v="-1">−1 mese</button><button type="button" data-act="shiftPays" data-v="1">+1 mese</button></div>` : ''}
       <div id="resNote">${resNoteHTML(d)}</div>
       ${d.payments.some(p => !p.planned) ? `<div class="hint" style="margin-bottom:10px">Extra pagati: ${fmt(s.extra)}</div>` : ''}
-      <div class="field"><label>Note</label><input data-f="notes" value="${esc(d.notes)}"></div>
-      <div class="sheet-actions"><button class="btn primary" data-act="saveContract">Salva</button>${sheet.isNew ? '' : `<button class="btn danger" data-act="delContract">${sheet.confirmDel ? 'Confermi? Elimino' : 'Elimina'}</button>`}</div>`;
+      </div></details><div class="field"><label>Note</label><input data-f="notes" value="${esc(d.notes)}"></div>
+      <div class="contract-save-bar"><button class="btn primary" data-act="saveContract">Salva modifiche</button>${sheet.isNew ? '' : `<button class="btn danger" data-act="delContract">${sheet.confirmDel ? 'Confermi? Elimino' : 'Elimina'}</button>`}</div>`;
   } else if (t === 'logout') {
     b.innerHTML = `${head('Esci')}
       <div class="hint" style="margin-bottom:14px">I dati restano nel repo. Da questo dispositivo spariscono.</div>
@@ -1230,8 +1300,10 @@ function onAct(act, el) {
     case 'editContract': { const c = state.contracts.find(x => x.id === v); if (!c) return; openSheet('contract', { isNew: false, draft: JSON.parse(JSON.stringify(c)) }); break; }
     case 'setKind': sheet.draft.kind = v; renderSheet(); break;
     case 'setVat': sheet.draft.vat = num(v); renderSheet(); break;
-    case 'enableItems': { const d = sheet.draft; if (!d.items?.length) d.items = [{ id: uid(), name: 'Da suddividere', amount: contractTotal(d) }]; renderSheet(); break; }
-    case 'addItem': sheet.draft.items.push({ id: uid(), name: '', amount: 0 }); renderSheet(); $$('#sheetBody [data-item-field]').slice(-2)[0]?.focus(); break;
+    case 'enableItems': { const d = sheet.draft; if (!d.items?.length) { d.items = [{ id: uid(), name: 'Da suddividere', amount: contractTotal(d), category: '', vendor: '' }]; sheet.openGroup = ''; } renderSheet(); break; }
+    case 'addItem': { const d=sheet.draft, category=d.items.at(-1)?.category || ''; d.items.push({ id:uid(), name:'', amount:0, category, vendor:'' }); sheet.openGroup=category; renderSheet(); break; }
+    case 'addCategory': { const d=sheet.draft, used=new Set(d.items.map(i=>i.category || '')); let label='Nuova categoria', n=2; while(used.has(label)) label='Nuova categoria '+n++; d.items.push({id:uid(),name:'',amount:0,category:label,vendor:''}); sheet.openGroup=label; renderSheet(); break; }
+    case 'addItemToCategory': { const d=sheet.draft, item=d.items[Number(v)]; if (!item) break; d.items.push({id:uid(), name:'',amount:0,category:item.category || '',vendor:''}); sheet.openGroup=item.category || ''; renderSheet(); break; }
     case 'delItem': { const d = sheet.draft, i = Number(v), item = d.items[i]; if (item && !d.payments.some(p => p.itemId === item.id)) d.items.splice(i, 1); renderSheet(); break; }
     case 'delPay': { const p = sheet.draft.payments[Number(v)]; if (p && !p.actual) sheet.draft.payments.splice(Number(v), 1); renderSheet(); break; }
     case 'shiftPays': for (const p of sheet.draft.payments) if (p.planned && !p.actual) p.planned.month = addMonths(p.planned.month, Number(v)); renderSheet(); break;
@@ -1239,7 +1311,7 @@ function onAct(act, el) {
     case 'addPayPct': sheet.draft.payments.push({ id: uid(), note: `${v}%`, planned: { amount: r2(contractTotal(sheet.draft) * num(v) / 100), ...nextPlan(sheet.draft) }, actual: null }); renderSheet(); break;
     case 'addPayRest': { const res = contractStats(sheet.draft).unscheduled; if (res <= 0.5) { toast('Niente da aggiungere'); return; } sheet.draft.payments.push({ id: uid(), note: 'Saldo', planned: { amount: res, ...nextPlan(sheet.draft) }, actual: null }); renderSheet(); break; }
     case 'saveContract': {
-      const d = sheet.draft; d.name = d.name.trim() || 'Contratto'; d.items = (d.items || []).filter(i => i.name.trim() || i.amount > 0).map(i => ({ ...i, name: i.name.trim() || 'Voce', amount: r2(Math.max(0, num(i.amount))) })); d.payments = d.payments.filter(p => p.actual || (p.planned && (p.planned.amount > 0 || p.note)));
+      const d = sheet.draft; d.name = d.name.trim() || 'Contratto'; d.items = (d.items || []).filter(i => i.name.trim() || i.amount > 0 || d.payments.some(p => p.itemId === i.id)).map(i => ({ ...i, name: i.name.trim() || 'Voce', category: String(i.category || '').trim(), vendor: String(i.vendor || '').trim(), amount: r2(Math.max(0, num(i.amount))) })); d.payments = d.payments.filter(p => p.actual || (p.planned && (p.planned.amount > 0 || p.note)));
       const i = state.contracts.findIndex(x => x.id === d.id); if (i >= 0) state.contracts[i] = d; else state.contracts.push(d);
       normalize(state); persist(); closeSheet(); contractView = d.id; cantView = 'contratti'; if (tab !== 'cantiere') showTab('cantiere'); else render(); toast('Salvato'); break;
     }
@@ -1267,13 +1339,20 @@ $('#sheet').addEventListener('close', () => { sheet = null; });
 $('#sheetBody').addEventListener('input', e => {
   const el = e.target; if (!sheet || sheet.type !== 'contract') return; const d = sheet.draft;
   if (el.dataset.f) { const f = el.dataset.f; d[f] = ['net', 'vat'].includes(f) ? num(el.value) : el.value; if (f === 'vat') $$('#sheetBody .chips [data-act="setVat"]').forEach(b => b.classList.toggle('on', num(b.dataset.v) === d.vat)); refreshDerived(); }
-  else if (el.dataset.itemField) { const [i, f] = el.dataset.itemField.split(':'); const item = d.items[Number(i)]; if (!item) return; item[f] = f === 'amount' ? Math.max(0, num(el.value)) : el.value; refreshDerived(); }
+  else if (el.dataset.itemField) { const [i, f] = el.dataset.itemField.split(':'); const item = d.items[Number(i)]; if (!item) return; item[f] = f === 'amount' ? Math.max(0, num(el.value)) : el.value; refreshDerived(); const summary=el.closest('.category-edit')?.querySelector('summary b:last-child'); if(summary) summary.textContent=fmt(itemGroups(d).find(g=>g.name===(item.category||''))?.total || 0); }
   else if (el.dataset.pf) {
     const [i, f] = el.dataset.pf.split(':'); const p = d.payments[Number(i)]; if (!p || !p.planned) return;
     if (f === 'when') { p.planned.offset = null; p.planned.month = el.value; }
     else if (f === 'amount') p.planned.amount = num(el.value); else p[f] = el.value;
     refreshDerived();
   }
+});
+$('#sheetBody').addEventListener('change', e => {
+  const el=e.target; if (!sheet || sheet.type!=='contract' || el.dataset.categoryRename===undefined) return;
+  const d=sheet.draft, first=d.items[Number(el.dataset.categoryRename)]; if (!first) return;
+  const before=first.category || '', after=el.value.trim();
+  for (const item of d.items) if ((item.category||'')===before) item.category=after;
+  sheet.openGroup=after; renderSheet();
 });
 $('#importFile').addEventListener('change', e => { const f = e.target.files?.[0]; if (f) importJSON(f); e.target.value = ''; });
 document.addEventListener('input', e => {
