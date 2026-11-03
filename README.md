@@ -15,7 +15,7 @@ La pagina è vuota finché non ci metti i tuoi dati. Per vederla con numeri di p
 
 **Cantiere.** *Mesi*: un mese per riga, con una barra e quanto avrai da parte a fine mese. Tocchi un mese e si apre: cosa c'è da pagare, cosa hai già pagato. *Contratti*: la torta di come si dividono i soldi tra impresa, architetto e fornitori, e una scheda per ognuno con totale, pagato, resta, prossimo pagamento.
 
-**Voci e categorie (facoltative).** Un contratto semplice continua a usare imponibile, IVA e scadenze. Se invece desideri un dettaglio, scegli *Suddividi in voci* e organizza i prodotti in categorie, ad esempio *Bagno → Doccia → Piatto, Parete, Colonna*. Per ogni prodotto puoi indicare importo IVA inclusa e fornitore, senza anagrafiche o nuovi contratti. Le categorie non hanno un costo proprio: il totale del contratto è la somma dei prodotti. I pagamenti rimangono quelli del contratto, associabili ai singoli prodotti oppure non assegnati, e si modificano nell'apposita sezione richiudibile. Importazione, backup e vecchi contratti rimangono compatibili; non viene effettuato alcun accorpamento automatico di contratti già esistenti.
+**Voci e categorie (facoltative).** Un contratto semplice continua a usare imponibile, IVA e scadenze. Se invece desideri un dettaglio, scegli *Suddividi in voci* e organizza i prodotti in categorie, ad esempio *Bagno → Doccia → Piatto, Parete, Colonna*. Per ogni prodotto puoi indicare importo IVA inclusa e fornitore, senza anagrafiche o nuovi contratti. Le categorie non hanno un costo proprio: il totale del contratto è la somma dei prodotti. I pagamenti rimangono quelli del contratto, associabili ai singoli prodotti oppure non assegnati, e si modificano nell'apposita sezione richiudibile. In **Modifica contratto → Categorie e prodotti → Prepara pagamenti**, l'app può creare un pagamento previsto per ogni prodotto non ancora coperto: se esistono rate generiche non pagate con importi coerenti, le ripartisce conservando importo e mese complessivi. Se trova pagamenti già effettuati non associati, discrepanze o somme non riconciliabili, non modifica nulla e chiede di sistemare manualmente. Per i contratti dettagliati senza alcun pagamento, il primo salvataggio prepara i pagamenti dai prodotti. Importazione, backup e vecchi contratti rimangono compatibili; non viene effettuato alcun accorpamento automatico di contratti già esistenti.
 
 **Mostra.** Nella scheda di un contratto c'è un tasto che nasconde tutto il resto: rimane solo quella scheda. La fai vedere all'impresa o all'architetto, senza mostrare i tuoi soldi o gli altri contratti. Trasparenza, con misura.
 
@@ -61,7 +61,7 @@ Quando il token scade l'app segna *Offline* e lo dice: ne generi un altro, tocch
 | `index.html` | Tutta l'app. Zero librerie, nessun dato dentro. |
 | `manifest.webmanifest`, `icon.svg`, `icon-180.png` | Per "Aggiungi a Home". |
 | `docs/entrate-mensili.md` | Regole delle entrate confermate, compatibilità e casi di accettazione. |
-| `tests/entrate-mensili.test.cjs`, `tests/voci-contratto.test.cjs`, `tests/categorie-contratto.test.cjs` | Verifica dei calcoli, dei pagamenti e della compatibilità: `node --test tests/*.test.cjs`. |
+| `tests/entrate-mensili.test.cjs`, `tests/voci-contratto.test.cjs`, `tests/categorie-contratto.test.cjs`, `tests/pagamenti-prodotto.test.cjs` | Verifica dei calcoli, dei pagamenti e della compatibilità: `node --test tests/*.test.cjs`. |
 
 Per avere una copia tua: fai un fork e accendi GitHub Pages sul branch `main`.
 
