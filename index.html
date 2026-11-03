@@ -296,9 +296,9 @@ body.present{padding-bottom:24px}
 .present-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 
 /* sheet */
-dialog.sheet{border:0;padding:0;background:var(--surface);color:var(--ink);width:100%;max-width:100%;max-height:92dvh;margin:0;position:fixed;left:0;right:0;bottom:0;top:auto;border-radius:22px 22px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.2);overflow:hidden}
+dialog.sheet{border:0;padding:0;background:var(--surface);color:var(--ink);width:100%;max-width:100%;max-height:92dvh;margin:0;position:fixed;left:0;right:0;bottom:0;top:auto;border-radius:22px 22px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.2);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
-.sheet-body{padding:16px 18px calc(18px + env(safe-area-inset-bottom));overflow:auto;max-height:92dvh}
+.sheet-body{padding:16px 18px calc(18px + env(safe-area-inset-bottom));overflow:visible;max-height:none}
 .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .sheet-head h2{font-size:18px}
 .sheet-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
@@ -308,7 +308,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 .icon-btn svg{width:20px;height:20px}
 @media (min-width:900px){
   dialog.sheet{position:fixed;inset:0;margin:auto;width:520px;max-width:520px;border-radius:22px;max-height:88vh}
-  .sheet-body{max-height:88vh}
+  .sheet-body{max-height:none}
 }
 
 /* line items */
@@ -390,7 +390,7 @@ dialog.sheet::backdrop{background:rgba(10,12,10,.45)}
 (() => {
 'use strict';
 /* ===== utils ===== */
-const BUILD = '3 nov 2026 · voci di spesa';
+const BUILD = '3 nov 2026 · scorrimento contratti';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const uid = () => Math.random().toString(36).slice(2, 10);
