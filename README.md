@@ -15,7 +15,7 @@ La pagina è vuota finché non ci metti i tuoi dati. Per vederla con numeri di p
 
 **Cantiere.** *Mesi*: un mese per riga, con una barra e quanto avrai da parte a fine mese. Tocchi un mese e si apre: cosa c'è da pagare, cosa hai già pagato. *Contratti*: la torta di come si dividono i soldi tra impresa, architetto e fornitori, e una scheda per ognuno con totale, pagato, resta, prossimo pagamento.
 
-**Voci di spesa.** Un contratto può contenere più voci (es. *Materiali bagno* → rivestimenti, sanitari, doccia, rubinetteria), ognuna con un importo IVA inclusa. In **Modifica contratto** scegli *Suddividi in voci*, aggiungi le righe e associa ogni pagamento alla voce giusta. Aprendo il contratto, ogni voce mostra importo, pagato, residuo e pagamenti espandibili. I pagamenti vecchi restano visibili come *non assegnati* fino a quando li colleghi. Per i contratti senza voci resta il modello tradizionale imponibile + IVA e pagamenti complessivi. La modalità dettagliata serve anche a raggruppare acquisti da più fornitori in una singola categoria di budget, senza cambiare chi emette materialmente le fatture.
+**Voci e categorie (facoltative).** Un contratto semplice continua a usare imponibile, IVA e scadenze. Se invece desideri un dettaglio, scegli *Suddividi in voci* e organizza i prodotti in categorie, ad esempio *Bagno → Doccia → Piatto, Parete, Colonna*. Per ogni prodotto puoi indicare importo IVA inclusa e fornitore, senza anagrafiche o nuovi contratti. Le categorie non hanno un costo proprio: il totale del contratto è la somma dei prodotti. I pagamenti rimangono quelli del contratto, associabili ai singoli prodotti oppure non assegnati, e si modificano nell'apposita sezione richiudibile. Importazione, backup e vecchi contratti rimangono compatibili; non viene effettuato alcun accorpamento automatico di contratti già esistenti.
 
 **Mostra.** Nella scheda di un contratto c'è un tasto che nasconde tutto il resto: rimane solo quella scheda. La fai vedere all'impresa o all'architetto, senza mostrare i tuoi soldi o gli altri contratti. Trasparenza, con misura.
 
@@ -61,7 +61,7 @@ Quando il token scade l'app segna *Offline* e lo dice: ne generi un altro, tocch
 | `index.html` | Tutta l'app. Zero librerie, nessun dato dentro. |
 | `manifest.webmanifest`, `icon.svg`, `icon-180.png` | Per "Aggiungi a Home". |
 | `docs/entrate-mensili.md` | Regole delle entrate confermate, compatibilità e casi di accettazione. |
-| `tests/entrate-mensili.test.cjs`, `tests/voci-contratto.test.cjs` | Verifica dei calcoli, dei pagamenti e della compatibilità: `node --test tests/*.test.cjs`. |
+| `tests/entrate-mensili.test.cjs`, `tests/voci-contratto.test.cjs`, `tests/categorie-contratto.test.cjs` | Verifica dei calcoli, dei pagamenti e della compatibilità: `node --test tests/*.test.cjs`. |
 
 Per avere una copia tua: fai un fork e accendi GitHub Pages sul branch `main`.
 
