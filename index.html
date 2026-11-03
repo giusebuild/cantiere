@@ -652,8 +652,8 @@ function prepareItemPayments(d, month) {
   if (gap.some(x => x.need < 0)) return { ok:false, message:'Alcuni prodotti hanno già pagamenti previsti superiori al loro importo. Correggili prima di continuare.' };
   const missing = gap.reduce((t,x) => t + x.need, 0);
   if (!missing) return { ok:false, message:'Ogni prodotto ha già i suoi pagamenti previsti.' };
-  const paidUnassigned = d.payments.filter(p => !p.itemId && p.actual);
-  if (paidUnassigned.length) return { ok:false, message:'Ci sono pagamenti già effettuati non associati a prodotti. Assegnali manualmente prima di preparare i restanti: non verranno modificati automaticamente.' };
+  const paidUnassigned = d.payments.filter(p => p.actual && (!p.itemId || !p.planned));
+  if (paidUnassigned.length) return { ok:false, message:'Ci sono pagamenti già effettuati non associati a un prodotto o senza un importo previsto. Verificali prima di preparare i restanti: non verranno modificati automaticamente.' };
   const unsplit = d.payments.filter(p => !p.itemId && p.planned && !p.actual);
   const available = unsplit.reduce((t,p) => t + cents(p.planned.amount), 0);
   if (unsplit.length && available !== missing) return { ok:false, message:'I pagamenti generici ancora previsti (' + fmt(available / 100) + ') non coincidono con gli importi dei prodotti da coprire (' + fmt(missing / 100) + '). Nessun pagamento è stato modificato.' };
